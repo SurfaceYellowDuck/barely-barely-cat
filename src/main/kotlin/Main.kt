@@ -112,7 +112,7 @@ fun App() {
           }
           drawCircle(
             color = color,
-            center = Offset(point.x, point.y),
+            center = Offset(point.x.toDp().toPx(), point.y.toDp().toPx()),
             radius = pointRadius
           )
         }

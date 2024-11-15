@@ -32,9 +32,22 @@ data class Cat(
     var state: State = State.WALK,
     var sleepTimer: Int = 0,
     var sleepDuration: Int = Random.nextInt(5, 10)
-) {
+) : Comparable<Cat> {
     fun distance(other: Cat): Float {
         return sqrt((x - other.x) * (x - other.x) + (y - other.y) * (y - other.y))
+    }
+
+    override fun compareTo(other: Cat) = compareValuesBy(this, other,
+            { it.x },
+            { it.y }
+    )
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is Cat) return false
+
+        return x == other.x &&
+               y == other.y 
     }
 }
 fun getRandomFloatInRange(a: Float, b: Float): Float {

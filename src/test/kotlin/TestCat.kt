@@ -11,4 +11,27 @@ class TestCat {
        assertEquals(7f, distance(cat1, cat2, "manhattan"))
        assertEquals(4f, distance(cat1, cat2, "chebyshev"))
    }
+
+    @Test
+    fun testNearestNeighbor() {
+        val cats = listOf(
+            Cat(9.0f, 5.0f),
+            Cat(100.0f, 600.0f),
+            Cat(15.0f, 15.0f)
+        )
+        val kdTree = KDTree(cats, Cat::distance)
+
+        val target = Cat(9.0f, 6.0f)
+        val nearest = kdTree.nearestNeighbor(target)
+        
+        assertEquals(Cat(9.0f, 5.0f), nearest)
+    }
+
+    @Test
+    fun testEmptyKDTree() {
+        val cats = emptyList<Cat>()
+        val kdTree = KDTree(cats, Cat::distance)
+
+        assertNull(kdTree.root)
+    }
 }

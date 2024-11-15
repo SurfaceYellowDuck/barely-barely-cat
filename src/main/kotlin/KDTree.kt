@@ -5,12 +5,13 @@ class KDNode(
     var right: KDNode? = null
 )
 
-class KDTree(cats: List<Cat>) {
-
+class KDTree(cats: List<Cat>, distanceFunction: (Cat, Cat) -> Float) {
     var root: KDNode? = null
+    var dist: (Cat, Cat) -> Float = Cat::distance
 
     init {
         root = buildTree(cats, 0)
+        dist = distanceFunction
     }
 
     private fun buildTree(points: List<Cat>, depth: Int): KDNode? {
@@ -42,7 +43,8 @@ class KDTree(cats: List<Cat>) {
         if (node == null) return bestNode
 
         val axis = node.axis
-        val currentDist = target.distance(node.cat)
+//        val currentDist = target.distance(node.cat)
+        val currentDist = dist(target, node.cat)
 
         // Игнорируем точку, если она совпадает с целевой
         var newBestNode = bestNode
@@ -68,7 +70,8 @@ class KDTree(cats: List<Cat>) {
                 target,
                 depth + 1,
                 newBestNode,
-                newBestNode?.cat?.distance(target) ?: newBestDist
+//                newBestNode?.cat?.distance(target) ?: newBestDist
+                if (newBestNode != null) dist(target, newBestNode.cat) else newBestDist
             )
         }
 

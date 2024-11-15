@@ -13,6 +13,7 @@ import androidx.compose.ui.window.rememberWindowState
 import kotlin.math.pow
 import kotlin.math.sqrt
 import kotlin.random.Random
+import kotlin.math.abs
 
 enum class State {
     WALK,
@@ -68,18 +69,21 @@ fun App() {
 
     LaunchedEffect(Unit) {
         while (true) {
-            val catsKDTree = KDTree(cats)
+            val dista = { cat1: Cat, cat2: Cat -> distance(cat1, cat2, method)}
+            val catsKDTree = KDTree(cats, dista)
             val newCats = cats.map { cat ->
                 val nearestCat = catsKDTree.nearestNeighbor(cat)
                 val catState = when {
                     nearestCat?.let { cat.distance(nearestCat) }!! <= r0 -> State.FIGHT
                     cat.distance(nearestCat) <= R0 && Random.nextFloat() <
                             (1 / cat.distance(nearestCat).pow(2)) -> State.HISS
+
                     cat.sleepTimer > 0 -> State.SLEEP
                     Random.nextFloat() < sleepProbability -> {
                         cat.sleepTimer = cat.sleepDuration
                         State.SLEEP
                     }
+
                     else -> State.WALK
                 }
 
@@ -126,14 +130,14 @@ fun App() {
     }
 }
 
-//fun distance(cat1: Cat, cat2: Cat, metric: String): Float {
-//  return when (metric) {
-//    "euclidean" -> sqrt((cat1.x - cat2.x).pow(2) + (cat1.y - cat2.y).pow(2))
-//    "manhattan" -> abs(cat1.x - cat2.x) + abs(cat1.y - cat2.y)
-//    "chebyshev" -> maxOf(abs(cat1.x - cat2.x), abs(cat1.y - cat2.y))
-//    else -> throw IllegalArgumentException("Invalid distance metric: $metric")
-//  }
-//}
+fun distance(cat1: Cat, cat2: Cat, metric: String): Float {
+  return when (metric) {
+    "euclidean" -> sqrt((cat1.x - cat2.x).pow(2) + (cat1.y - cat2.y).pow(2))
+    "manhattan" -> abs(cat1.x - cat2.x) + abs(cat1.y - cat2.y)
+    "chebyshev" -> maxOf(abs(cat1.x - cat2.x), abs(cat1.y - cat2.y))
+    else -> throw IllegalArgumentException("Invalid distance metric: $metric")
+  }
+}
 
 fun main() = application {
     Window(

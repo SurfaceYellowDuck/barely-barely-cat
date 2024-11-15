@@ -52,6 +52,8 @@ fun initPoints(count: Int, screenSize: Pair<Float, Float>): List<Cat> {
     return points
 }
 
+
+
 @Composable
 @Preview
 fun App() {
@@ -79,9 +81,9 @@ fun App() {
             val newCats = cats.map { cat ->
                 val nearestCat = catsKDTree.nearestNeighbor(cat)
                 val catState = when {
-                    nearestCat?.let { cat.distance(nearestCat) }!! <= r0 -> State.FIGHT
-                    cat.distance(nearestCat) <= R0 && Random.nextFloat() <
-                            (1 / cat.distance(nearestCat).pow(2)) -> State.HISS
+                    nearestCat?.let { dista(cat, nearestCat) }!! <= r0 -> State.FIGHT
+                    dista(cat, nearestCat) <= R0 && Random.nextFloat() <
+                            (1 / dista(cat, nearestCat).pow(2)) -> State.HISS
 
                     cat.sleepTimer > 0 -> State.SLEEP
                     Random.nextFloat() < sleepProbability -> {
@@ -105,7 +107,7 @@ fun App() {
                 Cat(newX, newY, catState, cat.sleepTimer, cat.sleepDuration)
             }.toList()
             cats = newCats
-            kotlinx.coroutines.delay(refreshTime.text.toLong())
+            kotlinx.coroutines.delay(refreshTime.text.toLongOrNull() ?: 100)
         }
     }
 

@@ -2,10 +2,11 @@ import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.MaterialTheme
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
@@ -51,25 +52,29 @@ fun initPoints(count: Int, screenSize: Pair<Float, Float>): List<Cat> {
     return points
 }
 
-
-
-val pointCount: Int = 50000
-val width = 1200.dp
-val height = 1200.dp
-val method = "chebyshev"
-
 @Composable
 @Preview
 fun App() {
-    val screenSize = Pair(width.value, height.value)
-    var cats by remember { mutableStateOf(initPoints(pointCount, screenSize)) }
+    var pointCount by remember { mutableStateOf(TextFieldValue("500")) }
+    var width by remember { mutableStateOf(TextFieldValue("800")) }
+    var height by remember { mutableStateOf(TextFieldValue("800")) }
+
+    val methods = listOf("euclidean", "manhattan", "chebyshev")
+    var selectedMethod by remember { mutableStateOf(methods[0]) }
+    var expanded by remember { mutableStateOf(false) }
+
+    var refreshTime by remember { mutableStateOf(TextFieldValue("500")) }
+
+    val screenSize = Pair(width.text.toFloat(), height.text.toFloat())
+    var cats by remember { mutableStateOf(initPoints(pointCount.text.toInt(), screenSize)) }
+
     val r0 = 2f
     val R0 = 5f
     val sleepProbability = 0.01f
 
     LaunchedEffect(Unit) {
         while (true) {
-            val dista = { cat1: Cat, cat2: Cat -> distance(cat1, cat2, method)}
+            val dista = { cat1: Cat, cat2: Cat -> distance(cat1, cat2, selectedMethod)}
             val catsKDTree = KDTree(cats, dista)
             val newCats = cats.map { cat ->
                 val nearestCat = catsKDTree.nearestNeighbor(cat)
@@ -100,7 +105,7 @@ fun App() {
                 Cat(newX, newY, catState, cat.sleepTimer, cat.sleepDuration)
             }.toList()
             cats = newCats
-            kotlinx.coroutines.delay(1L)
+            kotlinx.coroutines.delay(refreshTime.text.toLong())
         }
     }
 
@@ -109,6 +114,46 @@ fun App() {
             modifier = androidx.compose.ui.Modifier.fillMaxSize().background(Color.White),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
+            Row(
+                modifier = androidx.compose.ui.Modifier.padding(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                TextField(
+                    value = pointCount,
+                    onValueChange = { pointCount = it },
+                    modifier = androidx.compose.ui.Modifier.width(100.dp),
+                    label = { Text("Point Count") }
+                )
+                TextField(
+                    value = refreshTime,
+                    onValueChange = { refreshTime = it },
+                    modifier = androidx.compose.ui.Modifier.width(100.dp),
+                    label = { Text("Refresh Time") }
+                )
+                Box {
+                    Button(onClick = { expanded = true }) {
+                        Text(selectedMethod)
+                    }
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        methods.forEach { method ->
+                            DropdownMenuItem(onClick = {
+                                selectedMethod = method
+                                expanded = false
+                            }) {
+                                Text(method)
+                            }
+                        }
+                    }
+                }
+                Button(onClick = {
+                    cats = initPoints(pointCount.text.toInt(), screenSize)
+                }) {
+                    Text("Update")
+                }
+            }
             Canvas(modifier = androidx.compose.ui.Modifier.weight(1f).fillMaxSize()) {
                 val pointRadius = (50.0 / sqrt(cats.size.toFloat())).coerceAtLeast(1.0)
 
@@ -144,7 +189,7 @@ fun main() = application {
         onCloseRequest = ::exitApplication,
         resizable = false,
         title = "Random Point Drawer",
-        state = rememberWindowState(width = width, height = height)
+        state = rememberWindowState(width=800.dp, height = 800.dp)
     ) {
         App()
     }

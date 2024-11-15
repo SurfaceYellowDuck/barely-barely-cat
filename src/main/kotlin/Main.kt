@@ -11,10 +11,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
+import kotlinx.coroutines.async
 import kotlin.math.pow
 import kotlin.math.sqrt
 import kotlin.random.Random
 import kotlin.math.abs
+import kotlinx.coroutines.awaitAll
+
 
 enum class State {
     WALK,
@@ -52,8 +55,6 @@ fun initPoints(count: Int, screenSize: Pair<Float, Float>): List<Cat> {
     return points
 }
 
-
-
 @Composable
 @Preview
 fun App() {
@@ -79,33 +80,35 @@ fun App() {
             val dista = { cat1: Cat, cat2: Cat -> distance(cat1, cat2, selectedMethod)}
             val catsKDTree = KDTree(cats, dista)
             val newCats = cats.map { cat ->
-                val nearestCat = catsKDTree.nearestNeighbor(cat)
-                val catState = when {
-                    nearestCat?.let { dista(cat, nearestCat) }!! <= r0 -> State.FIGHT
-                    dista(cat, nearestCat) <= R0 && Random.nextFloat() <
-                            (1 / dista(cat, nearestCat).pow(2)) -> State.HISS
+                async {
+                    val nearestCat = catsKDTree.nearestNeighbor(cat)
+                    val catState = when {
+                        nearestCat?.let { cat.distance(nearestCat) }!! <= r0 -> State.FIGHT
+                        cat.distance(nearestCat) <= R0 && Random.nextFloat() <
+                                (1 / cat.distance(nearestCat).pow(2)) -> State.HISS
 
-                    cat.sleepTimer > 0 -> State.SLEEP
-                    Random.nextFloat() < sleepProbability -> {
-                        cat.sleepTimer = cat.sleepDuration
-                        State.SLEEP
+                        cat.sleepTimer > 0 -> State.SLEEP
+                        Random.nextFloat() < sleepProbability -> {
+                            cat.sleepTimer = cat.sleepDuration
+                            State.SLEEP
+                        }
+
+                        else -> State.WALK
                     }
 
-                    else -> State.WALK
+                    val (dx, dy) = when (catState) {
+                        State.WALK, State.FIGHT, State.HISS -> Random.nextFloat() * 2 - 1 to Random.nextFloat() * 2 - 1
+                        else -> 0f to 0f
+                    }
+
+                    val newX = (cat.x + dx).coerceIn(0F, screenSize.first)
+                    val newY = (cat.y + dy).coerceIn(0F, screenSize.second)
+
+                    if (cat.sleepTimer > 0) cat.sleepTimer--
+
+                    Cat(newX, newY, catState, cat.sleepTimer, cat.sleepDuration)
                 }
-
-                val (dx, dy) = when (catState) {
-                    State.WALK, State.FIGHT, State.HISS -> Random.nextFloat() * 2 - 1 to Random.nextFloat() * 2 - 1
-                    else -> 0f to 0f
-                }
-
-                val newX = (cat.x + dx).coerceIn(0F, screenSize.first)
-                val newY = (cat.y + dy).coerceIn(0F, screenSize.second)
-
-                if (cat.sleepTimer > 0) cat.sleepTimer--
-
-                Cat(newX, newY, catState, cat.sleepTimer, cat.sleepDuration)
-            }.toList()
+            }.toList().awaitAll()
             cats = newCats
             kotlinx.coroutines.delay(refreshTime.text.toLongOrNull() ?: 100)
         }

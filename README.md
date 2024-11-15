@@ -17,7 +17,7 @@ This project simulates the behavior of cats on a rectangular map, taking into ac
 - refresh time. Limits: more than 25
 - metric : manhattan, chebyshev, euclidean
 
-![alt text](https://github.com/SurfaceYellowDuck/barely-barely-cat/images/hi.png)
+![alt text](https://github.com/SurfaceYellowDuck/barely-barely-cat/blob/main/images/hi.png)
 
 ## License
 

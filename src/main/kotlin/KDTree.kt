@@ -29,7 +29,7 @@ class KDTree(cats: List<Cat>) {
 
     // Поиск ближайшего соседа с исключением целевой точки
     fun nearestNeighbor(target: Cat): Cat? {
-        return nearestNeighbor(root, target, 0, null, Double.POSITIVE_INFINITY)?.cat
+        return nearestNeighbor(root, target, 0, null, Float.POSITIVE_INFINITY)?.cat
     }
 
     private fun nearestNeighbor(
@@ -37,7 +37,7 @@ class KDTree(cats: List<Cat>) {
         target: Cat,
         depth: Int,
         bestNode: KDNode?,
-        bestDist: Double
+        bestDist: Float
     ): KDNode? {
         if (node == null) return bestNode
 

@@ -10,7 +10,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
-//import kotlin.math.abs
 import kotlin.math.pow
 import kotlin.math.sqrt
 import kotlin.random.Random
@@ -23,21 +22,23 @@ enum class State {
 }
 
 data class Cat(
-    var x: Double = 0.0,
-    var y: Double = 0.0,
+    var x: Float = 0F,
+    var y: Float = 0F,
     var state: State = State.WALK,
     var sleepTimer: Int = 0,
     var sleepDuration: Int = Random.nextInt(5, 10)
 ) {
-    fun distance(other: Cat): Double {
+    fun distance(other: Cat): Float {
         return sqrt((x - other.x) * (x - other.x) + (y - other.y) * (y - other.y))
     }
 }
+fun getRandomFloatInRange(a: Float, b: Float): Float {
+    return Random.nextFloat() * (b - a) + a
+}
+fun generateRandomPoint(screenSize: Pair<Float, Float>) =
+    Cat(getRandomFloatInRange(0F, screenSize.first), getRandomFloatInRange(0F, screenSize.second), State.WALK)
 
-fun generateRandomPoint(screenSize: Pair<Double, Double>) =
-    Cat(Random.nextDouble(0.0, screenSize.first), Random.nextDouble(0.0, screenSize.second), State.WALK)
-
-fun initPoints(count: Int, screenSize: Pair<Double, Double>): List<Cat> {
+fun initPoints(count: Int, screenSize: Pair<Float, Float>): List<Cat> {
     val points = mutableListOf<Cat>()
     for (i in 0 until count) {
         var point = generateRandomPoint(screenSize)
@@ -49,6 +50,8 @@ fun initPoints(count: Int, screenSize: Pair<Double, Double>): List<Cat> {
     return points
 }
 
+
+
 val pointCount: Int = 50000
 val width = 1200.dp
 val height = 1200.dp
@@ -57,7 +60,7 @@ val method = "chebyshev"
 @Composable
 @Preview
 fun App() {
-    val screenSize = Pair(width.value.toDouble(), height.value.toDouble())
+    val screenSize = Pair(width.value, height.value)
     var cats by remember { mutableStateOf(initPoints(pointCount, screenSize)) }
     val r0 = 2f
     val R0 = 5f
@@ -85,8 +88,8 @@ fun App() {
                     else -> 0f to 0f
                 }
 
-                val newX = (cat.x + dx).coerceIn(0.0, screenSize.first)
-                val newY = (cat.y + dy).coerceIn(0.0, screenSize.second)
+                val newX = (cat.x + dx).coerceIn(0F, screenSize.first)
+                val newY = (cat.y + dy).coerceIn(0F, screenSize.second)
 
                 if (cat.sleepTimer > 0) cat.sleepTimer--
 
@@ -114,7 +117,7 @@ fun App() {
                     }
                     drawCircle(
                         color = color,
-                        center = Offset(point.x.toFloat().toDp().toPx(), point.y.toFloat().toDp().toPx()),
+                        center = Offset(point.x.dp.toPx(), point.y.dp.toPx()),
                         radius = pointRadius.toFloat()
                     )
                 }
@@ -123,7 +126,7 @@ fun App() {
     }
 }
 
-//fun distance(cat1: Cat, cat2: Cat, metric: String): Double {
+//fun distance(cat1: Cat, cat2: Cat, metric: String): Float {
 //  return when (metric) {
 //    "euclidean" -> sqrt((cat1.x - cat2.x).pow(2) + (cat1.y - cat2.y).pow(2))
 //    "manhattan" -> abs(cat1.x - cat2.x) + abs(cat1.y - cat2.y)

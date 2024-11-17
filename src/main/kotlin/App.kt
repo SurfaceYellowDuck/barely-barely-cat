@@ -28,6 +28,11 @@ import kotlin.math.sqrt
 import kotlin.random.Random
 import kotlin.math.pow
 
+/**
+ * Constant value representing a distance threshold used to determine the proximity between cats.
+ *
+ * If the distance between two cats is less than or equal to `r0`, certain state changes like `FIGHT` or `HISS` can be triggered.
+ */
 const val r0 = 2f
 const val R0 = 5f
 const val sleepProbability = 0.01f
@@ -37,6 +42,15 @@ const val pc = 500
 const val refTime = 500
 
 
+/**
+ * Updates the list of cats based on their current state and position.
+ *
+ * @param cats The list of cats to be updated.
+ * @param catsKDTree A KDTree that helps to find the nearest neighbor of a cat.
+ * @param distance A function that calculates the distance between two cats.
+ * @param screenSize A pair representing the width and height of the screen.
+ * @return A new list of cats with updated positions and states.
+ */
 fun updateCats(
     cats: List<Cat>,
     catsKDTree: KDTree,
@@ -74,6 +88,37 @@ fun updateCats(
     return newCats
 }
 
+/**
+ * Composable function representing the main app layout and behavior.
+ *
+ * This function contains various UI elements and logic to manage an interactive
+ * simulation of cats with different states, running in a continuous loop with a
+ * specified refresh rate. The UI allows customization of point count, refresh time, and
+ * distance metric calculation method.
+ *
+ * UI Components:
+ * - TextFields for point count and refresh time input.
+ * - Dropdown menu to select the distance metric method.
+ * - Button to update the cat positions.
+ * - Canvas to render the cat positions and states visually.
+ *
+ * The internal state is managed using Jetpack Compose's state management
+ * functions like `remember` and `mutableStateOf`. The cats' positions
+ * are updated periodically based on a KDTree structure for efficient distance
+ * calculations.
+ *
+ * The simulation loop runs continuously in a coroutine, updating the cat
+ * positions and UI at the specified refresh interval.
+ *
+ * Distance Metrics:
+ * - "euclidean" calculates straight-line distance.
+ * - "manhattan" calculates grid-based distance.
+ * - "chebyshev" calculates maximum of horizontal and vertical distances.
+ *
+ * The function utilizes various Compose UI components and functions like
+ * `MaterialTheme`, `Column`, `Row`, `TextField`, `Button`, `DropdownMenu`,
+ * `Canvas`, and drawing functions from the `androidx.compose.ui.graphics` package.
+ */
 @Composable
 @Preview
 fun app() {

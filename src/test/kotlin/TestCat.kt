@@ -14,12 +14,13 @@ class TestCat {
 
     @Test
     fun testNearestNeighbor() {
+        val dista = { cat1: Cat, cat2: Cat -> distance(cat1, cat2, "euclidean") }
         val cats = listOf(
             Cat(9.0f, 5.0f),
             Cat(100.0f, 600.0f),
             Cat(15.0f, 15.0f)
         )
-        val kdTree = KDTree(cats, Cat::distance)
+        val kdTree = KDTree(cats, dista)
 
         val target = Cat(9.0f, 6.0f)
         val nearest = kdTree.nearestNeighbor(target)
@@ -29,8 +30,9 @@ class TestCat {
 
     @Test
     fun testEmptyKDTree() {
+        val dista = { cat1: Cat, cat2: Cat -> distance(cat1, cat2, "euclidean") }
         val cats = emptyList<Cat>()
-        val kdTree = KDTree(cats, Cat::distance)
+        val kdTree = KDTree(cats, dista)
 
         assertNull(kdTree.root)
     }

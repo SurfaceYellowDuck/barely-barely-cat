@@ -42,7 +42,8 @@ data class Cat(
      * @return A negative integer, zero, or a positive integer as this Cat is less than, equal to,
      * or greater than the specified Cat.
      */
-    override fun compareTo(other: Cat) = compareValuesBy(this, other,
+    override fun compareTo(other: Cat) = compareValuesBy(
+        this, other,
         { it.x },
         { it.y }
     )

@@ -33,8 +33,6 @@ import kotlin.math.pow
  *
  * If the distance between two cats is less than or equal to `r0`, certain state changes like `FIGHT` or `HISS` can be triggered.
  */
-const val r0 = 2f
-const val R0 = 5f
 const val sleepProbability = 0.01f
 const val w = 800f
 const val h = 800f
@@ -57,6 +55,18 @@ fun updateCats(
     distance: (Cat, Cat) -> Float,
     screenSize: Pair<Float, Float>
 ): List<Cat> {
+    var r0 = when {
+        cats.size.toFloat() < 100 -> 30f
+        cats.size.toFloat() < 10000 -> 5f
+        else -> 1f
+    }
+
+    var R0 = when {
+        cats.size.toFloat() < 100 -> 90f
+        cats.size.toFloat() < 10000 -> 15f
+        else -> 5f
+    }
+
     val newCats = cats.map { cat ->
         val nearestCat = catsKDTree.nearestNeighbor(cat)
         val catState = when {

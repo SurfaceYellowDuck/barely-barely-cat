@@ -27,18 +27,31 @@ import androidx.compose.ui.unit.dp
 import kotlin.math.sqrt
 import kotlin.random.Random
 import kotlin.math.pow
+import java.io.File
+import com.google.gson.Gson
+
+data class Consts(val sleepProbability: Float, val w: Float, val h: Float, val pc: Int,
+    val refTime: Int, val r0_small: Float, val r0_big: Float,
+                 val R01_big: Float, val R01_small: Float)
 
 /**
  * Constant value representing a distance threshold used to determine the proximity between cats.
  *
  * If the distance between two cats is less than or equal to `r0`, certain state changes like `FIGHT` or `HISS` can be triggered.
  */
-const val sleepProbability = 0.01f
-const val w = 800f
-const val h = 800f
-const val pc = 500
-const val refTime = 500
 
+
+val filePath = "const.json" // Replace with your JSON file path
+val file = File(filePath)
+
+val jsonString = file.readText()
+val consts = Gson().fromJson(jsonString, Consts::class.java)
+
+val sleepProbability = consts.sleepProbability
+val w = consts.w
+val h = consts.h
+val pc = consts.pc
+val refTime = consts.refTime
 
 /**
  * Updates the list of cats based on their current state and position.
@@ -55,15 +68,15 @@ fun updateCats(
     distance: (Cat, Cat) -> Float,
     screenSize: Pair<Float, Float>
 ): List<Cat> {
-    var r0 = when {
-        cats.size.toFloat() < 100 -> 30f
-        cats.size.toFloat() < 10000 -> 5f
+    val r0 = when {
+        cats.size.toFloat() < 100 -> consts.r0_big
+        cats.size.toFloat() < 10000 -> consts.r0_small
         else -> 1f
     }
 
-    var R0 = when {
-        cats.size.toFloat() < 100 -> 90f
-        cats.size.toFloat() < 10000 -> 15f
+    val R0 = when {
+        cats.size.toFloat() < 100 -> consts.R01_big
+        cats.size.toFloat() < 10000 -> consts.R01_small
         else -> 5f
     }
 

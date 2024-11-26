@@ -3,9 +3,8 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 
-
-const val width = 800
-const val height = 800
+val width = consts.w
+val height = consts.h
 
 fun main() = application {
     Window(

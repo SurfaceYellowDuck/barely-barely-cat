@@ -11,7 +11,7 @@ fun main() = application {
         onCloseRequest = ::exitApplication,
         resizable = false,
         title = "Random Point Drawer",
-        state = rememberWindowState(width = width.dp, height = height.dp)
+        state = rememberWindowState(width = (width * 0.8).dp, height = (height * 0.8).dp)
     ) {
         app()
     }

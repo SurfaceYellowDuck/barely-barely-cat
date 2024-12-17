@@ -156,7 +156,9 @@ fun app() {
     var refreshTime by remember { mutableStateOf(TextFieldValue(refTime.toString())) }
 
     val screenSize = Pair(width.text.toFloat(), height.text.toFloat())
-    var cats by remember { mutableStateOf(initCats(pointCount.text.toInt(), screenSize)) }
+    var cats by remember { mutableStateOf(emptyList<Cat>()) }
+
+    var isRunning by remember { mutableStateOf(false) }
 
 
     LaunchedEffect(Unit) {
@@ -208,10 +210,17 @@ fun app() {
                         }
                     }
                 }
-                Button(onClick = {
-                    cats = initCats(pointCount.text.toInt(), screenSize)
-                }) {
-                    Text("Update")
+                Button(
+                    onClick = {
+                        cats = initCats(pointCount.text.toInt(), screenSize)
+                        isRunning = true
+                    },
+                    colors = androidx.compose.material.ButtonDefaults.buttonColors(
+                        backgroundColor = Color.Green,
+                        contentColor = Color.White
+                    )
+                ) {
+                    Text("Start")
                 }
             }
             Canvas(modifier = androidx.compose.ui.Modifier.weight(1f).fillMaxSize()) {

@@ -104,11 +104,22 @@ fun generateRandomCat(screenSize: Pair<Float, Float>) =
  * @param screenSize A pair representing the width and height of the screen.
  * @return A list of cats with unique positions within the specified screen size.
  */
-fun initCats(count: Int, screenSize: Pair<Float, Float>): List<Cat> {
+//fun initCats(count: Int, screenSize: Pair<Float, Float>): List<Cat> {
+//    val points = mutableListOf<Cat>()
+//    for (i in 0 until count) {
+//        var point = generateRandomCat(screenSize)
+//        while (points.contains(point)) {
+//            point = generateRandomCat(screenSize)
+//        }
+//        points.add(point)
+//    }
+//    return points
+//}
+fun initCats(count: Int, screenSize: Pair<Float, Float>, obstacles: List<Obstacle>): List<Cat> {
     val points = mutableListOf<Cat>()
     for (i in 0 until count) {
         var point = generateRandomCat(screenSize)
-        while (points.contains(point)) {
+        while (points.contains(point) || obstacles.any { it.contains(point) }) {
             point = generateRandomCat(screenSize)
         }
         points.add(point)

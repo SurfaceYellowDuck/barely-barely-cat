@@ -30,9 +30,17 @@ import kotlin.math.pow
 import java.io.File
 import com.google.gson.Gson
 
-data class Consts(val sleepProbability: Float, val w: Float, val h: Float, val pc: Int,
-    val refTime: Int, val r0_small: Float, val r0_big: Float,
-                 val R01_big: Float, val R01_small: Float)
+data class Consts(
+    val sleepProbability: Float,
+    val w: Float,
+    val h: Float,
+    val pc: Int,
+    val refTime: Int,
+    val r0_small: Float,
+    val r0_big: Float,
+    val R01_big: Float,
+    val R01_small: Float
+)
 
 /**
  * Constant value representing a distance threshold used to determine the proximity between cats.
@@ -66,7 +74,8 @@ fun updateCats(
     cats: List<Cat>,
     catsKDTree: KDTree,
     distance: (Cat, Cat) -> Float,
-    screenSize: Pair<Float, Float>
+    screenSize: Pair<Float, Float>,
+    obstacles: List<Obstacle>
 ): List<Cat> {
     val r0 = when {
         cats.size.toFloat() < 100 -> consts.r0_big
@@ -84,8 +93,7 @@ fun updateCats(
         val nearestCat = catsKDTree.nearestNeighbor(cat)
         val catState = when {
             nearestCat?.let { distance(cat, it) }!! <= r0 -> State.FIGHT
-            distance(cat, nearestCat) <= R0 && Random.nextFloat() <
-                    (1 / distance(cat, nearestCat).pow(2)) -> State.HISS
+            distance(cat, nearestCat) <= R0 && Random.nextFloat() < (1 / distance(cat, nearestCat).pow(2)) -> State.HISS
 
             cat.sleepTimer > 0 -> State.SLEEP
             Random.nextFloat() < sleepProbability -> {
@@ -101,10 +109,15 @@ fun updateCats(
             else -> 0f to 0f
         }
 
-        val newX = (cat.x + dx).coerceIn(0F, screenSize.first)
-        val newY = (cat.y + dy).coerceIn(0F, screenSize.second)
+        var newX = (cat.x + dx).coerceIn(0F, screenSize.first)
+        var newY = (cat.y + dy).coerceIn(0F, screenSize.second)
 
         if (cat.sleepTimer > 0) cat.sleepTimer--
+
+        if (obstacles.any { it.contains(Cat(newX, newY)) }) {
+            newX = cat.x
+            newY = cat.y
+        }
 
         Cat(newX, newY, catState, cat.sleepTimer, cat.sleepDuration)
     }.toList()
@@ -157,15 +170,15 @@ fun app() {
 
     val screenSize = Pair(width.text.toFloat(), height.text.toFloat())
     var cats by remember { mutableStateOf(emptyList<Cat>()) }
+    var obstacles by remember { mutableStateOf(initObstacles(5, screenSize)) }
 
     var isRunning by remember { mutableStateOf(false) }
-
 
     LaunchedEffect(Unit) {
         while (true) {
             val dista = { cat1: Cat, cat2: Cat -> distance(cat1, cat2, selectedMethod) }
             val catsKDTree = KDTree(cats, dista)
-            val newCats = updateCats(cats, catsKDTree, dista, screenSize)
+            val newCats = updateCats(cats, catsKDTree, dista, screenSize, obstacles)
             cats = newCats
             kotlinx.coroutines.delay(refreshTime.text.toLongOrNull() ?: 100)
         }
@@ -180,26 +193,32 @@ fun app() {
                 modifier = androidx.compose.ui.Modifier.padding(16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                Button(
+                    onClick = {
+                        cats = initCats(pointCount.text.toInt(), screenSize, obstacles)
+                        isRunning = true
+                    }, colors = androidx.compose.material.ButtonDefaults.buttonColors(
+                        backgroundColor = Color.Green, contentColor = Color.White
+                    )
+                ) {
+                    Text("Start")
+                }
                 TextField(
                     value = pointCount,
                     onValueChange = { pointCount = it },
                     modifier = androidx.compose.ui.Modifier.width(100.dp),
-                    label = { Text("Point Count") }
-                )
+                    label = { Text("Point Count") })
                 TextField(
                     value = refreshTime,
                     onValueChange = { refreshTime = it },
                     modifier = androidx.compose.ui.Modifier.width(100.dp),
-                    label = { Text("Refresh Time") }
-                )
+                    label = { Text("Refresh Time") })
                 Box {
                     Button(onClick = { expanded = true }) {
                         Text(selectedMethod)
                     }
                     DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
-                    ) {
+                        expanded = expanded, onDismissRequest = { expanded = false }) {
                         methods.forEach { method ->
                             DropdownMenuItem(onClick = {
                                 selectedMethod = method
@@ -210,21 +229,42 @@ fun app() {
                         }
                     }
                 }
-                Button(
-                    onClick = {
-                        cats = initCats(pointCount.text.toInt(), screenSize)
-                        isRunning = true
-                    },
-                    colors = androidx.compose.material.ButtonDefaults.buttonColors(
-                        backgroundColor = Color.Green,
-                        contentColor = Color.White
-                    )
-                ) {
-                    Text("Start")
+                Column {
+                    Button(
+                        onClick = {
+                            obstacles = obstacles + generateRandomObstacle(screenSize, obstacles)
+                            cats = initCats(pointCount.text.toInt(), screenSize, obstacles)
+                        }, colors = androidx.compose.material.ButtonDefaults.buttonColors(
+                            backgroundColor = Color.Blue, contentColor = Color.White
+                        )
+                    ) {
+                        Text("Add Obstacle")
+                    }
+                    Button(
+                        onClick = {
+                            if (obstacles.isNotEmpty()) {
+                                obstacles = obstacles.dropLast(1)
+                                cats = initCats(pointCount.text.toInt(), screenSize, obstacles)
+                            }
+                        }, colors = androidx.compose.material.ButtonDefaults.buttonColors(
+                            backgroundColor = Color.Red, contentColor = Color.White
+                        ), modifier = androidx.compose.ui.Modifier.padding(top = 8.dp)
+                    ) {
+                        Text("Remove Obstacle")
+                    }
                 }
             }
             Canvas(modifier = androidx.compose.ui.Modifier.weight(1f).fillMaxSize()) {
                 val pointRadius = (50.0 / sqrt(cats.size.toFloat())).coerceAtLeast(1.0)
+
+                // Draw obstacles
+                obstacles.forEach { obstacle ->
+                    drawRect(
+                        color = Color.Gray,
+                        topLeft = Offset(obstacle.x.dp.toPx(), obstacle.y.dp.toPx()),
+                        size = androidx.compose.ui.geometry.Size(obstacle.width.dp.toPx(), obstacle.height.dp.toPx())
+                    )
+                }
 
                 cats.forEach { point ->
                     val color = when (point.state) {

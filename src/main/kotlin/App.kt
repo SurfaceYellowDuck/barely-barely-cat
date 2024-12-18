@@ -54,8 +54,7 @@ val pc = consts.pc
 val refTime = consts.refTime
 
 data class ViewState(
-    val point: Cat,
-    val rotation: Float, // Угол поворота в градусах
+    val point: Cat, val rotation: Float, // Угол поворота в градусах
     val fieldOfView: Float // Угол обзора
 )
 
@@ -114,6 +113,7 @@ fun updateCats(
     }.toList()
     return newCats
 }
+
 @Composable
 fun app(Cats: List<Cat>) {
 //    var cats by remember {
@@ -153,13 +153,13 @@ fun app(Cats: List<Cat>) {
         }
     }
 
-    Column( modifier = Modifier.fillMaxSize().background(Color.White).padding(16.dp),
-            verticalArrangement = Arrangement.SpaceBetween
+    Column(
+        modifier = Modifier.fillMaxSize().background(Color.White).padding(16.dp),
+        verticalArrangement = Arrangement.SpaceBetween
     ) {
         Row(
-            modifier = androidx.compose.ui.Modifier.padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ){
+            modifier = androidx.compose.ui.Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
             run {
                 Button(
                     onClick = {
@@ -201,7 +201,8 @@ fun app(Cats: List<Cat>) {
                     Button(
                         onClick = {
                             obstacles = obstacles + generateRandomObstacle(screenSize, obstacles)
-                            cats = initCats(pointCount.text.toInt(), screenSize, obstacles)
+                            cats =
+                                if (cats.isEmpty()) cats else initCats(pointCount.text.toInt(), screenSize, obstacles)
                         }, colors = androidx.compose.material.ButtonDefaults.buttonColors(
                             backgroundColor = Color.Blue, contentColor = Color.White
                         )
@@ -212,7 +213,9 @@ fun app(Cats: List<Cat>) {
                         onClick = {
                             if (obstacles.isNotEmpty()) {
                                 obstacles = obstacles.dropLast(1)
-                                cats = initCats(pointCount.text.toInt(), screenSize, obstacles)
+                                cats = if (cats.isEmpty()) cats else initCats(
+                                    pointCount.text.toInt(), screenSize, obstacles
+                                )
                             }
                         }, colors = androidx.compose.material.ButtonDefaults.buttonColors(
                             backgroundColor = Color.Red, contentColor = Color.White
@@ -223,86 +226,80 @@ fun app(Cats: List<Cat>) {
                 }
             }
         }
-        Canvas(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .pointerInput(Unit) {
-                    detectTapGestures { offset ->
-                        if (!isDragging) {
-                            val tappedPoint = cats.find { point ->
-                                val distance = sqrt(
-                                    (point.x - offset.x).pow(2) +
-                                            (point.y - offset.y).pow(2)
-                                )
-                                distance < 20f
-                            }
 
-                            if (tappedPoint != null) {
-                                viewState = if (viewState?.point == tappedPoint) {
-                                    null
-                                } else {
-                                    ViewState(tappedPoint, 0f, 30f)
-                                }
-                            }
+        Canvas(modifier = Modifier.weight(1f).fillMaxWidth().pointerInput(Unit) {
+            detectTapGestures { offset ->
+                if (!isDragging) {
+                    val tappedPoint = cats.find { point ->
+                        val distance = sqrt(
+                            (point.x - offset.x).pow(2) + (point.y - offset.y).pow(2)
+                        )
+                        distance < 20f
+                    }
+
+                    if (tappedPoint != null) {
+                        viewState = if (viewState?.point == tappedPoint) {
+                            null
+                        } else {
+                            ViewState(tappedPoint, 0f, 30f)
                         }
                     }
                 }
-                .pointerInput(Unit) {
-                    detectDragGestures(
-                        onDragStart = { offset ->
-                            isDragging = true
-                            lastDragPosition = offset
-                        },
-                        onDragEnd = {
-                            isDragging = false
-                            lastDragPosition = null
-                        },
-                        onDrag = { change, _ ->
-                            if (viewState != null && lastDragPosition != null) {
-                                val currentPosition = change.position
+            }
+        }.pointerInput(Unit) {
+            detectDragGestures(onDragStart = { offset ->
+                isDragging = true
+                lastDragPosition = offset
+            }, onDragEnd = {
+                isDragging = false
+                lastDragPosition = null
+            }, onDrag = { change, _ ->
+                if (viewState != null && lastDragPosition != null) {
+                    val currentPosition = change.position
 
-                                // Вычисляем угол поворота на основе движения мыши
-                                val selectedPoint = viewState!!.point
-                                val center = Offset(selectedPoint.x, selectedPoint.y)
+                    // Calculate the rotation angle based on mouse movement
+                    val selectedPoint = viewState!!.point
+                    val center = Offset(selectedPoint.x, selectedPoint.y)
 
-                                val lastAngle = atan2(
-                                    lastDragPosition!!.y - center.y,
-                                    lastDragPosition!!.x - center.x
-                                )
-                                val currentAngle = atan2(
-                                    currentPosition.y - center.y,
-                                    currentPosition.x - center.x
-                                )
-
-                                val deltaAngle = (currentAngle - lastAngle).toDegrees()
-
-                                viewState = viewState!!.copy(
-                                    rotation = (viewState!!.rotation + deltaAngle)
-                                )
-
-                                lastDragPosition = currentPosition
-                            }
-                        }
+                    val lastAngle = atan2(
+                        lastDragPosition!!.y - center.y, lastDragPosition!!.x - center.x
                     )
+                    val currentAngle = atan2(
+                        currentPosition.y - center.y, currentPosition.x - center.x
+                    )
+
+                    val deltaAngle = (currentAngle - lastAngle).toDegrees()
+
+                    viewState = viewState!!.copy(
+                        rotation = (viewState!!.rotation + deltaAngle)
+                    )
+
+                    lastDragPosition = currentPosition
                 }
-        ) {
+            })
+        }) {
             val pointRadius = (50.0 / sqrt(cats.size.toFloat())).coerceAtLeast(1.0)
 
             obstacles.forEach { obstacle ->
-                drawRect(
-                    color = Color.Gray,
-                    topLeft = Offset(obstacle.x.dp.toPx(), obstacle.y.dp.toPx()),
-                    size = androidx.compose.ui.geometry.Size(obstacle.width.dp.toPx(), obstacle.height.dp.toPx())
-                )
+                val alpha = if (viewState != null) {
+                    calculateObstacleAlpha(
+                        obstacle, viewState!!.point, viewState!!.fieldOfView, viewState!!.rotation
+                    )
+                } else 1f
+
+                if (alpha > 0) {
+                    drawRect(
+                        color = Color.Gray.copy(alpha = alpha),
+                        topLeft = Offset(obstacle.x.dp.toPx(), obstacle.y.dp.toPx()),
+                        size = androidx.compose.ui.geometry.Size(obstacle.width.dp.toPx(), obstacle.height.dp.toPx())
+                    )
+                }
             }
+
             cats.forEach { point ->
                 val alpha = if (viewState != null) {
                     calculateAlpha(
-                        point,
-                        viewState!!.point,
-                        viewState!!.fieldOfView,
-                        viewState!!.rotation
+                        point, viewState!!.point, viewState!!.fieldOfView, viewState!!.rotation, obstacles
                     )
                 } else 1f
 
@@ -316,14 +313,11 @@ fun app(Cats: List<Cat>) {
                             State.SLEEP -> Color.Blue.copy(alpha = alpha)
                             State.HISS -> Color.Yellow.copy(alpha = alpha)
                         }
-//                        Color.Blue.copy(alpha = alpha)
-                    },
-                    radius =  pointRadius.toFloat(),
-                    center = Offset(point.x, point.y)
+                    }, radius = pointRadius.toFloat(), center = Offset(point.x, point.y)
                 )
 
                 if (viewState != null) {
-                    // Рисуем линии направления обзора
+                    // Draw view direction lines
                     val baseRotation = viewState!!.rotation
                     val angle = viewState!!.fieldOfView / 2
                     val length = 100f
@@ -336,7 +330,7 @@ fun app(Cats: List<Cat>) {
                     val rightX = viewState!!.point.x + length * cos(Math.toRadians(rightAngle.toDouble())).toFloat()
                     val rightY = viewState!!.point.y + length * sin(Math.toRadians(rightAngle.toDouble())).toFloat()
 
-                    // Центральная линия направления взгляда
+                    // Center view direction line
                     val centerX = viewState!!.point.x + length * cos(Math.toRadians(baseRotation.toDouble())).toFloat()
                     val centerY = viewState!!.point.y + length * sin(Math.toRadians(baseRotation.toDouble())).toFloat()
 
@@ -374,11 +368,32 @@ fun app(Cats: List<Cat>) {
     }
 }
 
+fun calculateObstacleAlpha(
+    obstacle: Obstacle, selectedPoint: Cat, fieldOfView: Float, rotation: Float
+): Float {
+    val dx = obstacle.x - selectedPoint.x
+    val dy = obstacle.y - selectedPoint.y
+
+    val distance = sqrt(dx * dx + dy * dy)
+    val angle = atan2(dy, dx).toDegrees()
+
+    // Normalize the angle relative to the current rotation
+    val normalizedAngle = ((angle - rotation + 180) % 360 - 180)
+
+    val halfFOV = fieldOfView / 2
+
+    return if (abs(normalizedAngle) <= halfFOV) {
+        // Obstacle is within the field of view
+        val maxDistance = 500f // Maximum visibility distance
+        (1 - (distance / maxDistance)).coerceIn(0f, 1f)
+    } else {
+        // Obstacle is outside the field of view
+        0f // Not visible
+    }
+}
+
 fun calculateAlpha(
-    point: Cat,
-    selectedPoint: Cat,
-    fieldOfView: Float,
-    rotation: Float
+    point: Cat, selectedPoint: Cat, fieldOfView: Float, rotation: Float, obstacles: List<Obstacle>
 ): Float {
     if (point == selectedPoint) return 1f
 
@@ -388,17 +403,20 @@ fun calculateAlpha(
     val distance = sqrt(dx * dx + dy * dy)
     val angle = atan2(dy, dx).toDegrees()
 
-    // Нормализуем угол относительно текущего поворота
+    // Normalize the angle relative to the current rotation
     val normalizedAngle = ((angle - rotation + 180) % 360 - 180)
 
     val halfFOV = fieldOfView / 2
 
-    return if (abs(normalizedAngle) <= halfFOV) {
-        // Точка находится в поле зрения
-        val maxDistance = 500f // Максимальная дистанция видимости
+    // Check if the point is within any obstacle
+    val isInObstacle = obstacles.any { it.contains(point) }
+
+    return if (abs(normalizedAngle) <= halfFOV && !isInObstacle) {
+        // Point is within the field of view and not in an obstacle
+        val maxDistance = 500f // Maximum visibility distance
         (1 - (distance / maxDistance)).coerceIn(0f, 1f)
     } else {
-        // Точка вне поля зрения
+        // Point is outside the field of view or in an obstacle
         0f
     }
 }

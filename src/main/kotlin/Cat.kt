@@ -12,10 +12,7 @@ import kotlin.math.abs
  * HISS - The entity is in a hising state.
  */
 enum class State {
-    WALK,
-    FIGHT,
-    SLEEP,
-    HISS
+    WALK, FIGHT, SLEEP, HISS
 }
 
 /**
@@ -43,11 +40,7 @@ data class Cat(
      * @return A negative integer, zero, or a positive integer as this Cat is less than, equal to,
      * or greater than the specified Cat.
      */
-    override fun compareTo(other: Cat) = compareValuesBy(
-        this, other,
-        { it.x },
-        { it.y }
-    )
+    override fun compareTo(other: Cat) = compareValuesBy(this, other, { it.x }, { it.y })
 
     /**
      * Indicates whether some other object is "equal to" this one.
@@ -60,8 +53,7 @@ data class Cat(
         if (this === other) return true
         if (other !is Cat) return false
 
-        return x == other.x &&
-                y == other.y
+        return x == other.x && y == other.y
     }
 
     /**
@@ -105,17 +97,6 @@ fun generateRandomCat(screenSize: Pair<Float, Float>) =
  * @param screenSize A pair representing the width and height of the screen.
  * @return A list of cats with unique positions within the specified screen size.
  */
-//fun initCats(count: Int, screenSize: Pair<Float, Float>): List<Cat> {
-//    val points = mutableListOf<Cat>()
-//    for (i in 0 until count) {
-//        var point = generateRandomCat(screenSize)
-//        while (points.contains(point)) {
-//            point = generateRandomCat(screenSize)
-//        }
-//        points.add(point)
-//    }
-//    return points
-//}
 fun initCats(count: Int, screenSize: Pair<Float, Float>, obstacles: List<Obstacle>): List<Cat> {
     val points = mutableListOf<Cat>()
     for (i in 0 until count) {

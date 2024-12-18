@@ -1,34 +1,33 @@
-import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.Text
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.application
+import androidx.compose.ui.window.rememberWindowState
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.math.abs
+import kotlin.math.atan2
+import kotlin.math.sqrt
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.material.Button
 import androidx.compose.material.DropdownMenu
 import androidx.compose.material.DropdownMenuItem
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
-import androidx.compose.material.TextField
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
+import androidx.compose.material.Slider
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.unit.dp
-import kotlin.math.sqrt
-import kotlin.random.Random
-import kotlin.math.pow
-import java.io.File
+import kotlin.math.*
+import androidx.compose.material.TextField
 import com.google.gson.Gson
+import java.io.File
+import kotlin.random.Random
 
 data class Consts(
     val sleepProbability: Float,
@@ -42,13 +41,6 @@ data class Consts(
     val R01_small: Float
 )
 
-/**
- * Constant value representing a distance threshold used to determine the proximity between cats.
- *
- * If the distance between two cats is less than or equal to `r0`, certain state changes like `FIGHT` or `HISS` can be triggered.
- */
-
-
 val filePath = "const.json" // Replace with your JSON file path
 val file = File(filePath)
 
@@ -61,15 +53,14 @@ val h = consts.h
 val pc = consts.pc
 val refTime = consts.refTime
 
-/**
- * Updates the list of cats based on their current state and position.
- *
- * @param cats The list of cats to be updated.
- * @param catsKDTree A KDTree that helps to find the nearest neighbor of a cat.
- * @param distance A function that calculates the distance between two cats.
- * @param screenSize A pair representing the width and height of the screen.
- * @return A new list of cats with updated positions and states.
- */
+data class ViewState(
+    val point: Cat,
+    val rotation: Float, // Угол поворота в градусах
+    val fieldOfView: Float // Угол обзора
+)
+
+// Extension функция для преобразования радиан в градусы
+fun Float.toDegrees(): Float = Math.toDegrees(this.toDouble()).toFloat()
 fun updateCats(
     cats: List<Cat>,
     catsKDTree: KDTree,
@@ -123,41 +114,19 @@ fun updateCats(
     }.toList()
     return newCats
 }
-
-/**
- * Composable function representing the main app layout and behavior.
- *
- * This function contains various UI elements and logic to manage an interactive
- * simulation of cats with different states, running in a continuous loop with a
- * specified refresh rate. The UI allows customization of point count, refresh time, and
- * distance metric calculation method.
- *
- * UI Components:
- * - TextFields for point count and refresh time input.
- * - Dropdown menu to select the distance metric method.
- * - Button to update the cat positions.
- * - Canvas to render the cat positions and states visually.
- *
- * The internal state is managed using Jetpack Compose's state management
- * functions like `remember` and `mutableStateOf`. The cats' positions
- * are updated periodically based on a KDTree structure for efficient distance
- * calculations.
- *
- * The simulation loop runs continuously in a coroutine, updating the cat
- * positions and UI at the specified refresh interval.
- *
- * Distance Metrics:
- * - "euclidean" calculates straight-line distance.
- * - "manhattan" calculates grid-based distance.
- * - "chebyshev" calculates maximum of horizontal and vertical distances.
- *
- * The function utilizes various Compose UI components and functions like
- * `MaterialTheme`, `Column`, `Row`, `TextField`, `Button`, `DropdownMenu`,
- * `Canvas`, and drawing functions from the `androidx.compose.ui.graphics` package.
- */
 @Composable
-@Preview
-fun app() {
+fun app(Cats: List<Cat>) {
+//    var cats by remember {
+//        mutableStateOf(Cats)
+//    }
+
+    var viewState by remember {
+        mutableStateOf<ViewState?>(null)
+    }
+
+    var isDragging by remember { mutableStateOf(false) }
+    var lastDragPosition by remember { mutableStateOf<Offset?>(null) }
+
     var pointCount by remember { mutableStateOf(TextFieldValue(pc.toString())) }
     val width by remember { mutableStateOf(TextFieldValue(w.toString())) }
     val height by remember { mutableStateOf(TextFieldValue(h.toString())) }
@@ -184,15 +153,14 @@ fun app() {
         }
     }
 
-    MaterialTheme {
-        Column(
-            modifier = androidx.compose.ui.Modifier.fillMaxSize().background(Color.White),
+    Column( modifier = Modifier.fillMaxSize().background(Color.White).padding(16.dp),
             verticalArrangement = Arrangement.SpaceBetween
-        ) {
-            Row(
-                modifier = androidx.compose.ui.Modifier.padding(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
+    ) {
+        Row(
+            modifier = androidx.compose.ui.Modifier.padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ){
+            run {
                 Button(
                     onClick = {
                         cats = initCats(pointCount.text.toInt(), screenSize, obstacles)
@@ -254,32 +222,201 @@ fun app() {
                     }
                 }
             }
-            Canvas(modifier = androidx.compose.ui.Modifier.weight(1f).fillMaxSize()) {
-                val pointRadius = (50.0 / sqrt(cats.size.toFloat())).coerceAtLeast(1.0)
+        }
+        Canvas(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .pointerInput(Unit) {
+                    detectTapGestures { offset ->
+                        if (!isDragging) {
+                            val tappedPoint = cats.find { point ->
+                                val distance = sqrt(
+                                    (point.x - offset.x).pow(2) +
+                                            (point.y - offset.y).pow(2)
+                                )
+                                distance < 20f
+                            }
 
-                // Draw obstacles
-                obstacles.forEach { obstacle ->
-                    drawRect(
-                        color = Color.Gray,
-                        topLeft = Offset(obstacle.x.dp.toPx(), obstacle.y.dp.toPx()),
-                        size = androidx.compose.ui.geometry.Size(obstacle.width.dp.toPx(), obstacle.height.dp.toPx())
+                            if (tappedPoint != null) {
+                                viewState = if (viewState?.point == tappedPoint) {
+                                    null
+                                } else {
+                                    ViewState(tappedPoint, 0f, 30f)
+                                }
+                            }
+                        }
+                    }
+                }
+                .pointerInput(Unit) {
+                    detectDragGestures(
+                        onDragStart = { offset ->
+                            isDragging = true
+                            lastDragPosition = offset
+                        },
+                        onDragEnd = {
+                            isDragging = false
+                            lastDragPosition = null
+                        },
+                        onDrag = { change, _ ->
+                            if (viewState != null && lastDragPosition != null) {
+                                val currentPosition = change.position
+
+                                // Вычисляем угол поворота на основе движения мыши
+                                val selectedPoint = viewState!!.point
+                                val center = Offset(selectedPoint.x, selectedPoint.y)
+
+                                val lastAngle = atan2(
+                                    lastDragPosition!!.y - center.y,
+                                    lastDragPosition!!.x - center.x
+                                )
+                                val currentAngle = atan2(
+                                    currentPosition.y - center.y,
+                                    currentPosition.x - center.x
+                                )
+
+                                val deltaAngle = (currentAngle - lastAngle).toDegrees()
+
+                                viewState = viewState!!.copy(
+                                    rotation = (viewState!!.rotation + deltaAngle)
+                                )
+
+                                lastDragPosition = currentPosition
+                            }
+                        }
                     )
                 }
+        ) {
+            val pointRadius = (50.0 / sqrt(cats.size.toFloat())).coerceAtLeast(1.0)
 
-                cats.forEach { point ->
-                    val color = when (point.state) {
-                        State.WALK -> Color.Green
-                        State.FIGHT -> Color.Red
-                        State.SLEEP -> Color.Blue
-                        State.HISS -> Color.Yellow
-                    }
-                    drawCircle(
-                        color = color,
-                        center = Offset(point.x.dp.toPx(), point.y.dp.toPx()),
-                        radius = pointRadius.toFloat()
+            obstacles.forEach { obstacle ->
+                drawRect(
+                    color = Color.Gray,
+                    topLeft = Offset(obstacle.x.dp.toPx(), obstacle.y.dp.toPx()),
+                    size = androidx.compose.ui.geometry.Size(obstacle.width.dp.toPx(), obstacle.height.dp.toPx())
+                )
+            }
+            cats.forEach { point ->
+                val alpha = if (viewState != null) {
+                    calculateAlpha(
+                        point,
+                        viewState!!.point,
+                        viewState!!.fieldOfView,
+                        viewState!!.rotation
+                    )
+                } else 1f
+
+                drawCircle(
+                    color = if (point == viewState?.point) {
+                        Color.Red.copy(alpha = 1f)
+                    } else {
+                        when (point.state) {
+                            State.WALK -> Color.Green.copy(alpha = alpha)
+                            State.FIGHT -> Color.Red.copy(alpha = alpha)
+                            State.SLEEP -> Color.Blue.copy(alpha = alpha)
+                            State.HISS -> Color.Yellow.copy(alpha = alpha)
+                        }
+//                        Color.Blue.copy(alpha = alpha)
+                    },
+                    radius =  pointRadius.toFloat(),
+                    center = Offset(point.x, point.y)
+                )
+
+                if (viewState != null) {
+                    // Рисуем линии направления обзора
+                    val baseRotation = viewState!!.rotation
+                    val angle = viewState!!.fieldOfView / 2
+                    val length = 100f
+
+                    val leftAngle = baseRotation - angle
+                    val rightAngle = baseRotation + angle
+
+                    val leftX = viewState!!.point.x + length * cos(Math.toRadians(leftAngle.toDouble())).toFloat()
+                    val leftY = viewState!!.point.y + length * sin(Math.toRadians(leftAngle.toDouble())).toFloat()
+                    val rightX = viewState!!.point.x + length * cos(Math.toRadians(rightAngle.toDouble())).toFloat()
+                    val rightY = viewState!!.point.y + length * sin(Math.toRadians(rightAngle.toDouble())).toFloat()
+
+                    // Центральная линия направления взгляда
+                    val centerX = viewState!!.point.x + length * cos(Math.toRadians(baseRotation.toDouble())).toFloat()
+                    val centerY = viewState!!.point.y + length * sin(Math.toRadians(baseRotation.toDouble())).toFloat()
+
+                    drawLine(
+                        color = Color.Gray,
+                        start = Offset(viewState!!.point.x, viewState!!.point.y),
+                        end = Offset(leftX, leftY)
+                    )
+
+                    drawLine(
+                        color = Color.Gray,
+                        start = Offset(viewState!!.point.x, viewState!!.point.y),
+                        end = Offset(rightX, rightY)
+                    )
+
+                    drawLine(
+                        color = Color.Red,
+                        start = Offset(viewState!!.point.x, viewState!!.point.y),
+                        end = Offset(centerX, centerY)
                     )
                 }
             }
         }
+
+        if (viewState != null) {
+            Text("Угол обзора: ${viewState!!.fieldOfView.toInt()}°")
+            Text("Поворот: ${viewState!!.rotation.toInt()}°")
+            Slider(
+                value = viewState!!.fieldOfView,
+                onValueChange = { viewState = viewState!!.copy(fieldOfView = it) },
+                valueRange = 10f..180f,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
     }
 }
+
+fun calculateAlpha(
+    point: Cat,
+    selectedPoint: Cat,
+    fieldOfView: Float,
+    rotation: Float
+): Float {
+    if (point == selectedPoint) return 1f
+
+    val dx = point.x - selectedPoint.x
+    val dy = point.y - selectedPoint.y
+
+    val distance = sqrt(dx * dx + dy * dy)
+    val angle = atan2(dy, dx).toDegrees()
+
+    // Нормализуем угол относительно текущего поворота
+    val normalizedAngle = ((angle - rotation + 180) % 360 - 180)
+
+    val halfFOV = fieldOfView / 2
+
+    return if (abs(normalizedAngle) <= halfFOV) {
+        // Точка находится в поле зрения
+        val maxDistance = 500f // Максимальная дистанция видимости
+        (1 - (distance / maxDistance)).coerceIn(0f, 1f)
+    } else {
+        // Точка вне поля зрения
+        0f
+    }
+}
+
+//fun main() = application {
+//    Window(
+//        onCloseRequest = ::exitApplication,
+//        resizable = false,
+//        title = "Random Point Drawer",
+//        state = rememberWindowState(width = width.dp, height = height.dp)
+//    ) {
+//        val width by remember { mutableStateOf(TextFieldValue(w.toString())) }
+//        val height by remember { mutableStateOf(TextFieldValue(h.toString())) }
+//        var pointCount by remember { mutableStateOf(TextFieldValue(pc.toString())) }
+//        val screenSize = Pair(width.text.toFloat(), height.text.toFloat())
+//        var obstacles by remember { mutableStateOf(initObstacles(5, screenSize)) }
+//
+//        var cats by remember { mutableStateOf(initCats(pointCount.text.toInt(), screenSize, obstacles)) }
+//        FirstPersonView(cats)
+//    }
+//}

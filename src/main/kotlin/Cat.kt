@@ -32,7 +32,8 @@ data class Cat(
     var y: Float = 0F,
     var state: State = State.WALK,
     var sleepTimer: Int = 0,
-    var sleepDuration: Int = Random.nextInt(5, 10)
+    var sleepDuration: Int = Random.nextInt(5, 10),
+    var isSelected: Boolean = false,
 ) : Comparable<Cat> {
 
     /**

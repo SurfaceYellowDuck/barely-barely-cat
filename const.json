@@ -1,0 +1,11 @@
+{
+  "sleepProbability": 0.01,
+  "w": 800,
+  "h": 800,
+  "pc": 500,
+  "refTime": 500,
+  "r0_small": 5,
+  "r0_big": 30,
+  "R01_big": 90,
+  "R01_small": 15
+}

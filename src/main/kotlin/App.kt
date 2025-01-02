@@ -114,10 +114,6 @@ fun updateCats(
 
 @Composable
 fun app(Cats: List<Cat>) {
-//    var cats by remember {
-//        mutableStateOf(Cats)
-//    }
-
     var viewState by remember {
         mutableStateOf<ViewState?>(null)
     }
@@ -299,7 +295,7 @@ fun app(Cats: List<Cat>) {
                     calculateAlpha(
                         point, viewState!!.point, viewState!!.fieldOfView.toDp().toPx(), viewState!!.rotation.toDp().toPx(), obstacles
                     ).toDp().toPx()
-                } else 1f
+                } else 1f.toDp().toPx()
 
                 drawCircle(
                     color = if (point == viewState?.point) {
@@ -418,21 +414,3 @@ fun calculateAlpha(
         0f
     }
 }
-
-//fun main() = application {
-//    Window(
-//        onCloseRequest = ::exitApplication,
-//        resizable = false,
-//        title = "Random Point Drawer",
-//        state = rememberWindowState(width = width.dp, height = height.dp)
-//    ) {
-//        val width by remember { mutableStateOf(TextFieldValue(w.toString())) }
-//        val height by remember { mutableStateOf(TextFieldValue(h.toString())) }
-//        var pointCount by remember { mutableStateOf(TextFieldValue(pc.toString())) }
-//        val screenSize = Pair(width.text.toFloat(), height.text.toFloat())
-//        var obstacles by remember { mutableStateOf(initObstacles(5, screenSize)) }
-//
-//        var cats by remember { mutableStateOf(initCats(pointCount.text.toInt(), screenSize, obstacles)) }
-//        FirstPersonView(cats)
-//    }
-//}

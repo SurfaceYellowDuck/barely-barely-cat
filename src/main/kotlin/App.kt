@@ -9,9 +9,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Window
-import androidx.compose.ui.window.application
-import androidx.compose.ui.window.rememberWindowState
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.abs
@@ -25,6 +22,7 @@ import androidx.compose.material.Slider
 import androidx.compose.ui.text.input.TextFieldValue
 import kotlin.math.*
 import androidx.compose.material.TextField
+import androidx.compose.ui.unit.Dp
 import com.google.gson.Gson
 import java.io.File
 import kotlin.random.Random
@@ -48,8 +46,8 @@ val jsonString = file.readText()
 val consts = Gson().fromJson(jsonString, Consts::class.java)
 
 val sleepProbability = consts.sleepProbability
-val w = consts.w
-val h = consts.h
+val w = consts.w.dp.value
+val h = consts.h.dp.value
 val pc = consts.pc
 val refTime = consts.refTime
 
@@ -64,7 +62,7 @@ fun updateCats(
     cats: List<Cat>,
     catsKDTree: KDTree,
     distance: (Cat, Cat) -> Float,
-    screenSize: Pair<Float, Float>,
+    screenSize: Pair<Dp, Dp>,
     obstacles: List<Obstacle>
 ): List<Cat> {
     val r0 = when {
@@ -99,8 +97,8 @@ fun updateCats(
             else -> 0f to 0f
         }
 
-        var newX = (cat.x.value + dx).coerceIn(0F, screenSize.first)
-        var newY = (cat.y.value + dy).coerceIn(0F, screenSize.second)
+        var newX = (cat.x.value + dx).coerceIn(0F, screenSize.first.value)
+        var newY = (cat.y.value + dy).coerceIn(0F, screenSize.second.value)
 
         if (cat.sleepTimer > 0) cat.sleepTimer--
 
@@ -128,8 +126,8 @@ fun app(Cats: List<Cat>) {
     var lastDragPosition by remember { mutableStateOf<Offset?>(null) }
 
     var pointCount by remember { mutableStateOf(TextFieldValue(pc.toString())) }
-    val width by remember { mutableStateOf(TextFieldValue(w.toString())) }
-    val height by remember { mutableStateOf(TextFieldValue(h.toString())) }
+    val width by remember { mutableStateOf(TextFieldValue(w.dp.value.toString())) }
+    val height by remember { mutableStateOf(TextFieldValue(h.dp.value.toString())) }
 
     val methods = listOf("euclidean", "manhattan", "chebyshev")
     var selectedMethod by remember { mutableStateOf(methods[0]) }
@@ -137,7 +135,7 @@ fun app(Cats: List<Cat>) {
 
     var refreshTime by remember { mutableStateOf(TextFieldValue(refTime.toString())) }
 
-    val screenSize = Pair(width.text.toFloat(), height.text.toFloat())
+    val screenSize = Pair(width.text.toFloat().dp, height.text.toFloat().dp)
     var cats by remember { mutableStateOf(emptyList<Cat>()) }
     var obstacles by remember { mutableStateOf(initObstacles(5, screenSize)) }
 
@@ -219,7 +217,7 @@ fun app(Cats: List<Cat>) {
                             }
                         }, colors = androidx.compose.material.ButtonDefaults.buttonColors(
                             backgroundColor = Color.Red, contentColor = Color.White
-                        ), modifier = androidx.compose.ui.Modifier.padding(top = 8.dp)
+                        ), modifier = Modifier.padding(top = 8.dp)
                     ) {
                         Text("Remove Obstacle")
                     }
@@ -232,7 +230,7 @@ fun app(Cats: List<Cat>) {
                 if (!isDragging) {
                     val tappedPoint = cats.find { point ->
                         val distance = sqrt(
-                            ((point.x - offset.x.dp)).value.pow(2) + ((point.y - offset.y.dp)).value.pow(2)
+                            ((point.x.toPx() - offset.x.toDp().toPx())).pow(2) + ((point.y.toPx() - offset.y.toDp().toPx())).pow(2)
                         )
                         distance < 20f
                     }
@@ -259,19 +257,19 @@ fun app(Cats: List<Cat>) {
 
                     // Calculate the rotation angle based on mouse movement
                     val selectedPoint = viewState!!.point
-                    val center = Offset(selectedPoint.x.value, selectedPoint.y.value)
+                    val center = Offset(selectedPoint.x.toPx(), selectedPoint.y.toPx())
 
                     val lastAngle = atan2(
-                        lastDragPosition!!.y - center.y, lastDragPosition!!.x - center.x
+                        lastDragPosition!!.y.toDp().toPx() - center.y.toDp().toPx(), lastDragPosition!!.x.toDp().toPx() - center.x.toDp().toPx()
                     )
                     val currentAngle = atan2(
-                        currentPosition.y - center.y, currentPosition.x - center.x
+                        currentPosition.y.toDp().toPx() - center.y.toDp().toPx(), currentPosition.x.toDp().toPx() - center.x.toDp().toPx()
                     )
 
-                    val deltaAngle = (currentAngle - lastAngle).toDegrees()
+                    val deltaAngle = (currentAngle.toDp().toPx() - lastAngle.toDp().toPx()).toDegrees()
 
                     viewState = viewState!!.copy(
-                        rotation = (viewState!!.rotation + deltaAngle)
+                        rotation = (viewState!!.rotation.toDp().toPx() + deltaAngle.toDp().toPx())
                     )
 
                     lastDragPosition = currentPosition
@@ -284,14 +282,14 @@ fun app(Cats: List<Cat>) {
                 val alpha = if (viewState != null) {
                     calculateObstacleAlpha(
                         obstacle, viewState!!.point, viewState!!.fieldOfView, viewState!!.rotation
-                    )
-                } else 1f
+                    ).toDp().toPx()
+                } else 1f.toDp().toPx()
 
                 if (alpha > 0) {
                     drawRect(
                         color = Color.Gray.copy(alpha = alpha),
-                        topLeft = Offset(obstacle.x.value, obstacle.y.value),
-                        size = androidx.compose.ui.geometry.Size(obstacle.width.value, obstacle.height.value)
+                        topLeft = Offset(obstacle.x.toPx(), obstacle.y.toPx()),
+                        size = androidx.compose.ui.geometry.Size(obstacle.width.toPx(), obstacle.height.toPx())
                     )
                 }
             }
@@ -299,8 +297,8 @@ fun app(Cats: List<Cat>) {
             cats.forEach { point ->
                 val alpha = if (viewState != null) {
                     calculateAlpha(
-                        point, viewState!!.point, viewState!!.fieldOfView, viewState!!.rotation, obstacles
-                    )
+                        point, viewState!!.point, viewState!!.fieldOfView.toDp().toPx(), viewState!!.rotation.toDp().toPx(), obstacles
+                    ).toDp().toPx()
                 } else 1f
 
                 drawCircle(
@@ -313,7 +311,7 @@ fun app(Cats: List<Cat>) {
                             State.SLEEP -> Color.Blue.copy(alpha = alpha)
                             State.HISS -> Color.Yellow.copy(alpha = alpha)
                         }
-                    }, radius = pointRadius.toFloat(), center = Offset(point.x.value, point.y.value)
+                    }, radius = pointRadius.toFloat(), center = Offset(point.x.toPx(), point.y.toPx())
                 )
 
                 if (viewState != null) {
@@ -325,30 +323,30 @@ fun app(Cats: List<Cat>) {
                     val leftAngle = baseRotation - angle
                     val rightAngle = baseRotation + angle
 
-                    val leftX = viewState!!.point.x.value + length * cos(Math.toRadians(leftAngle.toDouble())).toFloat()
-                    val leftY = viewState!!.point.y.value + length * sin(Math.toRadians(leftAngle.toDouble())).toFloat()
-                    val rightX = viewState!!.point.x.value + length * cos(Math.toRadians(rightAngle.toDouble())).toFloat()
-                    val rightY = viewState!!.point.y.value + length * sin(Math.toRadians(rightAngle.toDouble())).toFloat()
+                    val leftX = viewState!!.point.x.toPx() + length * cos(Math.toRadians(leftAngle.toDouble())).toFloat()
+                    val leftY = viewState!!.point.y.toPx() + length * sin(Math.toRadians(leftAngle.toDouble())).toFloat()
+                    val rightX = viewState!!.point.x.toPx() + length * cos(Math.toRadians(rightAngle.toDouble())).toFloat()
+                    val rightY = viewState!!.point.y.toPx() + length * sin(Math.toRadians(rightAngle.toDouble())).toFloat()
 
                     // Center view direction line
-                    val centerX = viewState!!.point.x.value + length * cos(Math.toRadians(baseRotation.toDouble())).toFloat()
-                    val centerY = viewState!!.point.y.value + length * sin(Math.toRadians(baseRotation.toDouble())).toFloat()
+                    val centerX = viewState!!.point.x.toPx() + length * cos(Math.toRadians(baseRotation.toDouble())).toFloat()
+                    val centerY = viewState!!.point.y.toPx() + length * sin(Math.toRadians(baseRotation.toDouble())).toFloat()
 
                     drawLine(
                         color = Color.Gray,
-                        start = Offset(viewState!!.point.x.value, viewState!!.point.y.value),
+                        start = Offset(viewState!!.point.x.toPx(), viewState!!.point.y.toPx()),
                         end = Offset(leftX, leftY)
                     )
 
                     drawLine(
                         color = Color.Gray,
-                        start = Offset(viewState!!.point.x.value, viewState!!.point.y.value),
+                        start = Offset(viewState!!.point.x.toPx(), viewState!!.point.y.toPx()),
                         end = Offset(rightX, rightY)
                     )
 
                     drawLine(
                         color = Color.Red,
-                        start = Offset(viewState!!.point.x.value, viewState!!.point.y.value),
+                        start = Offset(viewState!!.point.x.toPx(), viewState!!.point.y.toPx()),
                         end = Offset(centerX, centerY)
                     )
                 }

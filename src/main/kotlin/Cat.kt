@@ -79,8 +79,8 @@ data class Cat(
  * @param b The upper bound of the range, exclusive.
  * @return A random float value between the specified range [a, b].
  */
-fun getRandomFloatInRange(a: Float, b: Float): Float {
-    return Random.nextFloat() * (b - a) + a
+fun getRandomFloatInRange(a: Dp, b: Dp): Dp {
+    return (Random.nextFloat() * (b.value - a.value) + a.value).dp
 }
 
 /**
@@ -89,8 +89,8 @@ fun getRandomFloatInRange(a: Float, b: Float): Float {
  * @param screenSize The dimensions of the screen, where the first element is the width and the second is the height.
  * @return A randomly positioned `Cat` instance within the bounds of the given screen size.
  */
-fun generateRandomCat(screenSize: Pair<Float, Float>) =
-    Cat(getRandomFloatInRange(0F, screenSize.first).dp, getRandomFloatInRange(0F, screenSize.second).dp, State.WALK)
+fun generateRandomCat(screenSize: Pair<Dp, Dp>) =
+    Cat(getRandomFloatInRange(0F.dp, screenSize.first), getRandomFloatInRange(0F.dp, screenSize.second), State.WALK)
 
 /**
  * Initializes a list of cats with randomly generated positions within the given screen size.
@@ -99,7 +99,7 @@ fun generateRandomCat(screenSize: Pair<Float, Float>) =
  * @param screenSize A pair representing the width and height of the screen.
  * @return A list of cats with unique positions within the specified screen size.
  */
-fun initCats(count: Int, screenSize: Pair<Float, Float>, obstacles: List<Obstacle>): List<Cat> {
+fun initCats(count: Int, screenSize: Pair<Dp, Dp>, obstacles: List<Obstacle>): List<Cat> {
     val points = mutableListOf<Cat>()
     for (i in 0 until count) {
         var point = generateRandomCat(screenSize)

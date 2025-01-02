@@ -9,7 +9,7 @@ data class Obstacle(
     }
 }
 
-fun initObstacles(count: Int, screenSize: Pair<Float, Float>): List<Obstacle> {
+fun initObstacles(count: Int, screenSize: Pair<Dp, Dp>): List<Obstacle> {
     val obstacles = mutableListOf<Obstacle>()
     for (i in 0 until count) {
         val obstacle = generateRandomObstacle(screenSize, obstacles)
@@ -22,14 +22,14 @@ fun Obstacle.intersects(other: Obstacle): Boolean {
     return !(x + width < other.x || other.x + other.width < x || y + height < other.y || other.y + other.height < y)
 }
 
-fun generateRandomObstacle(screenSize: Pair<Float, Float>, existingObstacles: List<Obstacle>): Obstacle {
+fun generateRandomObstacle(screenSize: Pair<Dp, Dp>, existingObstacles: List<Obstacle>): Obstacle {
     var obstacle: Obstacle
     do {
-        val x = getRandomFloatInRange(0F, screenSize.first)
-        val y = getRandomFloatInRange(0F, screenSize.second)
-        val width = getRandomFloatInRange(20F, 100F)
-        val height = getRandomFloatInRange(20F, 100F)
-        obstacle = Obstacle(x.dp, y.dp, width.dp, height.dp)
+        val x = getRandomFloatInRange(0F.dp, screenSize.first)
+        val y = getRandomFloatInRange(0F.dp, screenSize.second)
+        val width = getRandomFloatInRange(20F.dp, 100F.dp)
+        val height = getRandomFloatInRange(20F.dp, 100F.dp)
+        obstacle = Obstacle(x, y, width, height)
     } while (existingObstacles.any { it.intersects(obstacle) })
     return obstacle
 }

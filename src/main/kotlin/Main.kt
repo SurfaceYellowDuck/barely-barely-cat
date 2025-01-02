@@ -8,24 +8,17 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 
-val width = consts.w
-val height = consts.h
-
+val width = consts.w.dp
+val height = consts.h.dp
+val screenSize = Pair(width, height)
 fun main() = application {
     Window(
         onCloseRequest = ::exitApplication,
-        resizable = true,
+        resizable = false,
         title = "Random Point Drawer",
-        state = rememberWindowState(width = (width * 0.8).dp, height = (height * 0.8).dp)
-//        resizable = false,
-//        title = "Random Point Drawer",
-//        state = rememberWindowState(width = width.dp, height = height.dp)
-
+        state = rememberWindowState(width = (screenSize.first), height = (screenSize.second))
     ) {
-        val width by remember { mutableStateOf(TextFieldValue(w.toString())) }
-        val height by remember { mutableStateOf(TextFieldValue(h.toString())) }
         var pointCount by remember { mutableStateOf(TextFieldValue(pc.toString())) }
-        val screenSize = Pair(width.text.toFloat(), height.text.toFloat())
         var obstacles by remember { mutableStateOf(initObstacles(5, screenSize)) }
 
         var cats by remember { mutableStateOf(initCats(pointCount.text.toInt(), screenSize, obstacles)) }

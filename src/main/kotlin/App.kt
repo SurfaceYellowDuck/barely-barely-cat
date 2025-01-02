@@ -99,17 +99,17 @@ fun updateCats(
             else -> 0f to 0f
         }
 
-        var newX = (cat.x + dx).coerceIn(0F, screenSize.first)
-        var newY = (cat.y + dy).coerceIn(0F, screenSize.second)
+        var newX = (cat.x.value + dx).coerceIn(0F, screenSize.first)
+        var newY = (cat.y.value + dy).coerceIn(0F, screenSize.second)
 
         if (cat.sleepTimer > 0) cat.sleepTimer--
 
-        if (obstacles.any { it.contains(Cat(newX, newY)) }) {
-            newX = cat.x
-            newY = cat.y
+        if (obstacles.any { it.contains(Cat(newX.dp, newY.dp)) }) {
+            newX = cat.x.value
+            newY = cat.y.value
         }
 
-        Cat(newX, newY, catState, cat.sleepTimer, cat.sleepDuration)
+        Cat(newX.dp, newY.dp, catState, cat.sleepTimer, cat.sleepDuration)
     }.toList()
     return newCats
 }
@@ -232,7 +232,7 @@ fun app(Cats: List<Cat>) {
                 if (!isDragging) {
                     val tappedPoint = cats.find { point ->
                         val distance = sqrt(
-                            (point.x - offset.x).pow(2) + (point.y - offset.y).pow(2)
+                            ((point.x - offset.x.dp)).value.pow(2) + ((point.y - offset.y.dp)).value.pow(2)
                         )
                         distance < 20f
                     }
@@ -259,7 +259,7 @@ fun app(Cats: List<Cat>) {
 
                     // Calculate the rotation angle based on mouse movement
                     val selectedPoint = viewState!!.point
-                    val center = Offset(selectedPoint.x, selectedPoint.y)
+                    val center = Offset(selectedPoint.x.value, selectedPoint.y.value)
 
                     val lastAngle = atan2(
                         lastDragPosition!!.y - center.y, lastDragPosition!!.x - center.x
@@ -290,8 +290,8 @@ fun app(Cats: List<Cat>) {
                 if (alpha > 0) {
                     drawRect(
                         color = Color.Gray.copy(alpha = alpha),
-                        topLeft = Offset(obstacle.x.dp.toPx(), obstacle.y.dp.toPx()),
-                        size = androidx.compose.ui.geometry.Size(obstacle.width.dp.toPx(), obstacle.height.dp.toPx())
+                        topLeft = Offset(obstacle.x.value, obstacle.y.value),
+                        size = androidx.compose.ui.geometry.Size(obstacle.width.value, obstacle.height.value)
                     )
                 }
             }
@@ -313,7 +313,7 @@ fun app(Cats: List<Cat>) {
                             State.SLEEP -> Color.Blue.copy(alpha = alpha)
                             State.HISS -> Color.Yellow.copy(alpha = alpha)
                         }
-                    }, radius = pointRadius.toFloat(), center = Offset(point.x, point.y)
+                    }, radius = pointRadius.toFloat(), center = Offset(point.x.value, point.y.value)
                 )
 
                 if (viewState != null) {
@@ -325,30 +325,30 @@ fun app(Cats: List<Cat>) {
                     val leftAngle = baseRotation - angle
                     val rightAngle = baseRotation + angle
 
-                    val leftX = viewState!!.point.x + length * cos(Math.toRadians(leftAngle.toDouble())).toFloat()
-                    val leftY = viewState!!.point.y + length * sin(Math.toRadians(leftAngle.toDouble())).toFloat()
-                    val rightX = viewState!!.point.x + length * cos(Math.toRadians(rightAngle.toDouble())).toFloat()
-                    val rightY = viewState!!.point.y + length * sin(Math.toRadians(rightAngle.toDouble())).toFloat()
+                    val leftX = viewState!!.point.x.value + length * cos(Math.toRadians(leftAngle.toDouble())).toFloat()
+                    val leftY = viewState!!.point.y.value + length * sin(Math.toRadians(leftAngle.toDouble())).toFloat()
+                    val rightX = viewState!!.point.x.value + length * cos(Math.toRadians(rightAngle.toDouble())).toFloat()
+                    val rightY = viewState!!.point.y.value + length * sin(Math.toRadians(rightAngle.toDouble())).toFloat()
 
                     // Center view direction line
-                    val centerX = viewState!!.point.x + length * cos(Math.toRadians(baseRotation.toDouble())).toFloat()
-                    val centerY = viewState!!.point.y + length * sin(Math.toRadians(baseRotation.toDouble())).toFloat()
+                    val centerX = viewState!!.point.x.value + length * cos(Math.toRadians(baseRotation.toDouble())).toFloat()
+                    val centerY = viewState!!.point.y.value + length * sin(Math.toRadians(baseRotation.toDouble())).toFloat()
 
                     drawLine(
                         color = Color.Gray,
-                        start = Offset(viewState!!.point.x, viewState!!.point.y),
+                        start = Offset(viewState!!.point.x.value, viewState!!.point.y.value),
                         end = Offset(leftX, leftY)
                     )
 
                     drawLine(
                         color = Color.Gray,
-                        start = Offset(viewState!!.point.x, viewState!!.point.y),
+                        start = Offset(viewState!!.point.x.value, viewState!!.point.y.value),
                         end = Offset(rightX, rightY)
                     )
 
                     drawLine(
                         color = Color.Red,
-                        start = Offset(viewState!!.point.x, viewState!!.point.y),
+                        start = Offset(viewState!!.point.x.value, viewState!!.point.y.value),
                         end = Offset(centerX, centerY)
                     )
                 }
@@ -374,8 +374,8 @@ fun calculateObstacleAlpha(
     val dx = obstacle.x - selectedPoint.x
     val dy = obstacle.y - selectedPoint.y
 
-    val distance = sqrt(dx * dx + dy * dy)
-    val angle = atan2(dy, dx).toDegrees()
+    val distance = sqrt(dx.value * dx.value + dy.value * dy.value)
+    val angle = atan2(dy.value, dx.value).toDegrees()
 
     // Normalize the angle relative to the current rotation
     val normalizedAngle = ((angle - rotation + 180) % 360 - 180)
@@ -400,8 +400,8 @@ fun calculateAlpha(
     val dx = point.x - selectedPoint.x
     val dy = point.y - selectedPoint.y
 
-    val distance = sqrt(dx * dx + dy * dy)
-    val angle = atan2(dy, dx).toDegrees()
+    val distance = sqrt(dx.value * dx.value + dy.value * dy.value)
+    val angle = atan2(dy.value, dx.value).toDegrees()
 
     // Normalize the angle relative to the current rotation
     val normalizedAngle = ((angle - rotation + 180) % 360 - 180)

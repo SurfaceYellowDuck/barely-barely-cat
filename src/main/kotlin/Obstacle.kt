@@ -1,5 +1,8 @@
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+
 data class Obstacle(
-    val x: Float, val y: Float, val width: Float, val height: Float
+    val x: Dp, val y: Dp, val width: Dp, val height: Dp
 ) {
     fun contains(cat: Cat): Boolean {
         return cat.x in x..(x + width) && cat.y in y..(y + height)
@@ -26,7 +29,7 @@ fun generateRandomObstacle(screenSize: Pair<Float, Float>, existingObstacles: Li
         val y = getRandomFloatInRange(0F, screenSize.second)
         val width = getRandomFloatInRange(20F, 100F)
         val height = getRandomFloatInRange(20F, 100F)
-        obstacle = Obstacle(x, y, width, height)
+        obstacle = Obstacle(x.dp, y.dp, width.dp, height.dp)
     } while (existingObstacles.any { it.intersects(obstacle) })
     return obstacle
 }

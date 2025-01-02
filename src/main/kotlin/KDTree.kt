@@ -89,11 +89,11 @@ class KDTree(cats: List<Cat>, distanceFunction: (Cat, Cat) -> Float) {
         }
 
         val diff = if (axis == 0) target.x - node.cat.x else target.y - node.cat.y
-        val (nextNode, otherNode) = if (diff < 0) node.left to node.right else node.right to node.left
+        val (nextNode, otherNode) = if (diff.value < 0) node.left to node.right else node.right to node.left
 
         newBestNode = nearestNeighbor(nextNode, target, depth + 1, newBestNode, newBestDist)
 
-        if (abs(diff) < newBestDist) {
+        if (abs(diff.value) < newBestDist) {
             newBestNode = nearestNeighbor(
                 otherNode,
                 target,

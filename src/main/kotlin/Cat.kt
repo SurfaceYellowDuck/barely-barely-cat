@@ -1,3 +1,5 @@
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import kotlin.math.sqrt
 import kotlin.random.Random
 import kotlin.math.pow
@@ -25,8 +27,8 @@ enum class State {
  * @property sleepDuration The duration for which the cat sleeps.
  */
 data class Cat(
-    var x: Float = 0F,
-    var y: Float = 0F,
+    var x: Dp = 0F.dp,
+    var y: Dp = 0F.dp,
     var state: State = State.WALK,
     var sleepTimer: Int = 0,
     var sleepDuration: Int = Random.nextInt(5, 10),
@@ -88,7 +90,7 @@ fun getRandomFloatInRange(a: Float, b: Float): Float {
  * @return A randomly positioned `Cat` instance within the bounds of the given screen size.
  */
 fun generateRandomCat(screenSize: Pair<Float, Float>) =
-    Cat(getRandomFloatInRange(0F, screenSize.first), getRandomFloatInRange(0F, screenSize.second), State.WALK)
+    Cat(getRandomFloatInRange(0F, screenSize.first).dp, getRandomFloatInRange(0F, screenSize.second).dp, State.WALK)
 
 /**
  * Initializes a list of cats with randomly generated positions within the given screen size.
@@ -120,9 +122,9 @@ fun initCats(count: Int, screenSize: Pair<Float, Float>, obstacles: List<Obstacl
  */
 fun distance(cat1: Cat, cat2: Cat, metric: String): Float {
     return when (metric) {
-        "euclidean" -> sqrt((cat1.x - cat2.x).pow(2) + (cat1.y - cat2.y).pow(2))
-        "manhattan" -> abs(cat1.x - cat2.x) + abs(cat1.y - cat2.y)
-        "chebyshev" -> maxOf(abs(cat1.x - cat2.x), abs(cat1.y - cat2.y))
+        "euclidean" -> sqrt((cat1.x.value - cat2.x.value).pow(2) + (cat1.y.value - cat2.y.value).pow(2))
+        "manhattan" -> abs(cat1.x.value - cat2.x.value) + abs(cat1.y.value - cat2.y.value)
+        "chebyshev" -> maxOf(abs(cat1.x.value - cat2.x.value), abs(cat1.y.value - cat2.y.value))
         else -> throw IllegalArgumentException("Invalid distance metric: $metric")
     }
 }

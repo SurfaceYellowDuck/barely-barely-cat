@@ -133,6 +133,7 @@ fun app(Cats: List<Cat>) {
 
     val screenSize = Pair(width.text.toFloat().dp, height.text.toFloat().dp)
     var cats by remember { mutableStateOf(emptyList<Cat>()) }
+    var catss by remember { mutableStateOf(emptyList<Cat>()) }
     var obstacles by remember { mutableStateOf(initObstacles(5, screenSize)) }
 
     var isRunning by remember { mutableStateOf(false) }
@@ -140,7 +141,15 @@ fun app(Cats: List<Cat>) {
     LaunchedEffect(Unit) {
         while (true) {
             val dista = { cat1: Cat, cat2: Cat -> distance(cat1, cat2, selectedMethod) }
-            val catsKDTree = KDTree(cats, dista)
+            var catsKDTree = KDTree(cats, dista)
+            if (cats.size == 1 || cats.size % 1 != 0) {
+                catsKDTree = KDTree(catss, dista)
+            } else {
+                catsKDTree = KDTree(cats, dista)
+            }
+
+
+
             val newCats = updateCats(cats, catsKDTree, dista, screenSize, obstacles)
             cats = newCats
             kotlinx.coroutines.delay(refreshTime.text.toLongOrNull() ?: 100)
@@ -167,9 +176,16 @@ fun app(Cats: List<Cat>) {
                 }
                 TextField(
                     value = pointCount,
-                    onValueChange = { pointCount = it },
+                    onValueChange = { newValue ->
+                    val regex = Regex("^[1-9][0-9]*$")
+                    if (regex.matches(newValue.text) && newValue.text != "1") {
+                        pointCount = newValue
+                    } else 
+                        pointCount = TextFieldValue("0")
+                    },
                     modifier = androidx.compose.ui.Modifier.width(100.dp),
-                    label = { Text("Point Count") })
+                    label = { Text("Point Count") }
+                )
                 TextField(
                     value = refreshTime,
                     onValueChange = { refreshTime = it },

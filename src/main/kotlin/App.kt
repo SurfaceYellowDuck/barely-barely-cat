@@ -188,9 +188,18 @@ fun app(Cats: List<Cat>) {
                 )
                 TextField(
                     value = refreshTime,
-                    onValueChange = { refreshTime = it },
-                    modifier = androidx.compose.ui.Modifier.width(100.dp),
-                    label = { Text("Refresh Time") })
+                    onValueChange = { newValue ->
+                        val parsedValue = newValue.text.toLongOrNull()
+
+                        if (parsedValue == null || parsedValue <= 0) {
+                            refreshTime = TextFieldValue("1000")
+                        } else {
+                            refreshTime = newValue
+                        }
+                    },
+                    modifier = Modifier.width(100.dp),
+                    label = { Text("Refresh Time") }
+                )
                 Box {
                     Button(onClick = { expanded = true }) {
                         Text(selectedMethod)

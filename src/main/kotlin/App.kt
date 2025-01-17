@@ -27,6 +27,19 @@ import com.google.gson.Gson
 import java.io.File
 import kotlin.random.Random
 
+/**
+ * Data class representing constants used in the application.
+ *
+ * @property sleepProbability Probability of a cat going to sleep.
+ * @property w Width of the screen.
+ * @property h Height of the screen.
+ * @property pc Point count.
+ * @property refTime Refresh time.
+ * @property r0_small Small radius for interaction.
+ * @property r0_big Big radius for interaction.
+ * @property R01_big Big radius for detection.
+ * @property R01_small Small radius for detection.
+ */
 data class Consts(
     val sleepProbability: Float,
     val w: Float,
@@ -51,13 +64,35 @@ val h = consts.h.dp.value
 val pc = consts.pc
 val refTime = consts.refTime
 
+/**
+ * Data class representing the view state of a cat.
+ *
+ * @property point The cat being viewed.
+ * @property rotation The rotation angle in degrees.
+ * @property fieldOfView The field of view angle.
+ */
 data class ViewState(
     val point: Cat, val rotation: Float, // Угол поворота в градусах
     val fieldOfView: Float // Угол обзора
 )
 
-// Extension функция для преобразования радиан в градусы
+/**
+ * Extension function to convert radians to degrees.
+ *
+ * @return The angle in degrees.
+ */
 fun Float.toDegrees(): Float = Math.toDegrees(this.toDouble()).toFloat()
+
+/**
+ * Updates the state of the cats based on their interactions and environment.
+ *
+ * @param cats List of cats to update.
+ * @param catsKDTree KDTree for nearest neighbor search.
+ * @param distance Function to calculate the distance between two cats.
+ * @param screenSize The size of the screen.
+ * @param obstacles List of obstacles in the environment.
+ * @return The updated list of cats.
+ */
 fun updateCats(
     cats: List<Cat>,
     catsKDTree: KDTree,
@@ -112,6 +147,11 @@ fun updateCats(
     return newCats
 }
 
+/**
+ * Composable function to render the application UI.
+ *
+ * @param Cats List of cats to display.
+ */
 @Composable
 fun app(Cats: List<Cat>) {
     var viewState by remember {
@@ -180,7 +220,7 @@ fun app(Cats: List<Cat>) {
                     val regex = Regex("^[1-9][0-9]*$")
                     if (regex.matches(newValue.text) && newValue.text != "1") {
                         pointCount = newValue
-                    } else 
+                    } else
                         pointCount = TextFieldValue("0")
                     },
                     modifier = androidx.compose.ui.Modifier.width(100.dp),
@@ -387,6 +427,15 @@ fun app(Cats: List<Cat>) {
     }
 }
 
+/**
+ * Calculates the alpha value for an obstacle based on its visibility.
+ *
+ * @param obstacle The obstacle to calculate the alpha for.
+ * @param selectedPoint The selected cat.
+ * @param fieldOfView The field of view angle.
+ * @param rotation The rotation angle.
+ * @return The alpha value for the obstacle.
+ */
 fun calculateObstacleAlpha(
     obstacle: Obstacle, selectedPoint: Cat, fieldOfView: Float, rotation: Float
 ): Float {
@@ -411,6 +460,16 @@ fun calculateObstacleAlpha(
     }
 }
 
+/**
+ * Calculates the alpha value for a cat based on its visibility.
+ *
+ * @param point The cat to calculate the alpha for.
+ * @param selectedPoint The selected cat.
+ * @param fieldOfView The field of view angle.
+ * @param rotation The rotation angle.
+ * @param obstacles List of obstacles in the environment.
+ * @return The alpha value for the cat.
+ */
 fun calculateAlpha(
     point: Cat, selectedPoint: Cat, fieldOfView: Float, rotation: Float, obstacles: List<Obstacle>
 ): Float {

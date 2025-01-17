@@ -2,9 +2,7 @@ name: Kotlin CI
 
 on:
     push:
-        branches: ["*"]
-    pull_request:
-        branches: ["*"]
+        branches: [ DRISTALISHE_BENZ_AMG_S63]
 
 jobs:
     build:

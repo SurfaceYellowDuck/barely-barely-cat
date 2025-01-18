@@ -9,10 +9,7 @@ import kotlin.math.abs
  * @property right The right child node in the K-D tree.
  */
 class KDNode(
-    val cat: Cat,
-    val axis: Int,
-    var left: KDNode? = null,
-    var right: KDNode? = null
+    val cat: Cat, val axis: Int, var left: KDNode? = null, var right: KDNode? = null
 )
 
 /**
@@ -75,11 +72,7 @@ class KDTree(cats: List<Cat>, distanceFunction: (Cat, Cat) -> Float) {
      * @return The KDNode representing the nearest neighbor of the target cat.
      */
     private fun nearestNeighbor(
-        node: KDNode?,
-        target: Cat,
-        depth: Int,
-        bestNode: KDNode?,
-        bestDist: Float
+        node: KDNode?, target: Cat, depth: Int, bestNode: KDNode?, bestDist: Float
     ): KDNode? {
         if (node == null) return bestNode
 
@@ -96,11 +89,11 @@ class KDTree(cats: List<Cat>, distanceFunction: (Cat, Cat) -> Float) {
         }
 
         val diff = if (axis == 0) target.x - node.cat.x else target.y - node.cat.y
-        val (nextNode, otherNode) = if (diff < 0) node.left to node.right else node.right to node.left
+        val (nextNode, otherNode) = if (diff.value < 0) node.left to node.right else node.right to node.left
 
         newBestNode = nearestNeighbor(nextNode, target, depth + 1, newBestNode, newBestDist)
 
-        if (abs(diff) < newBestDist) {
+        if (abs(diff.value) < newBestDist) {
             newBestNode = nearestNeighbor(
                 otherNode,
                 target,

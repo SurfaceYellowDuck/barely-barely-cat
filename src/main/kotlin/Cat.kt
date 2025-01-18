@@ -1,3 +1,5 @@
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import kotlin.math.sqrt
 import kotlin.random.Random
 import kotlin.math.pow
@@ -12,10 +14,7 @@ import kotlin.math.abs
  * HISS - The entity is in a hising state.
  */
 enum class State {
-    WALK,
-    FIGHT,
-    SLEEP,
-    HISS
+    WALK, FIGHT, SLEEP, HISS
 }
 
 /**
@@ -28,11 +27,12 @@ enum class State {
  * @property sleepDuration The duration for which the cat sleeps.
  */
 data class Cat(
-    var x: Float = 0F,
-    var y: Float = 0F,
+    var x: Dp = 0F.dp,
+    var y: Dp = 0F.dp,
     var state: State = State.WALK,
     var sleepTimer: Int = 0,
-    var sleepDuration: Int = Random.nextInt(5, 10)
+    var sleepDuration: Int = Random.nextInt(5, 10),
+    var isSelected: Boolean = false,
 ) : Comparable<Cat> {
 
     /**
@@ -42,11 +42,7 @@ data class Cat(
      * @return A negative integer, zero, or a positive integer as this Cat is less than, equal to,
      * or greater than the specified Cat.
      */
-    override fun compareTo(other: Cat) = compareValuesBy(
-        this, other,
-        { it.x },
-        { it.y }
-    )
+    override fun compareTo(other: Cat) = compareValuesBy(this, other, { it.x }, { it.y })
 
     /**
      * Indicates whether some other object is "equal to" this one.
@@ -59,8 +55,7 @@ data class Cat(
         if (this === other) return true
         if (other !is Cat) return false
 
-        return x == other.x &&
-                y == other.y
+        return x == other.x && y == other.y
     }
 
     /**
@@ -84,8 +79,8 @@ data class Cat(
  * @param b The upper bound of the range, exclusive.
  * @return A random float value between the specified range [a, b].
  */
-fun getRandomFloatInRange(a: Float, b: Float): Float {
-    return Random.nextFloat() * (b - a) + a
+fun getRandomFloatInRange(a: Dp, b: Dp): Dp {
+    return (Random.nextFloat() * (b.value - a.value) + a.value).dp
 }
 
 /**
@@ -94,8 +89,8 @@ fun getRandomFloatInRange(a: Float, b: Float): Float {
  * @param screenSize The dimensions of the screen, where the first element is the width and the second is the height.
  * @return A randomly positioned `Cat` instance within the bounds of the given screen size.
  */
-fun generateRandomCat(screenSize: Pair<Float, Float>) =
-    Cat(getRandomFloatInRange(0F, screenSize.first), getRandomFloatInRange(0F, screenSize.second), State.WALK)
+fun generateRandomCat(screenSize: Pair<Dp, Dp>) =
+    Cat(getRandomFloatInRange(0F.dp, screenSize.first), getRandomFloatInRange(0F.dp, screenSize.second), State.WALK)
 
 /**
  * Initializes a list of cats with randomly generated positions within the given screen size.
@@ -104,11 +99,11 @@ fun generateRandomCat(screenSize: Pair<Float, Float>) =
  * @param screenSize A pair representing the width and height of the screen.
  * @return A list of cats with unique positions within the specified screen size.
  */
-fun initCats(count: Int, screenSize: Pair<Float, Float>): List<Cat> {
+fun initCats(count: Int, screenSize: Pair<Dp, Dp>, obstacles: List<Obstacle>): List<Cat> {
     val points = mutableListOf<Cat>()
     for (i in 0 until count) {
         var point = generateRandomCat(screenSize)
-        while (points.contains(point)) {
+        while (points.contains(point) || obstacles.any { it.contains(point) }) {
             point = generateRandomCat(screenSize)
         }
         points.add(point)
@@ -127,9 +122,9 @@ fun initCats(count: Int, screenSize: Pair<Float, Float>): List<Cat> {
  */
 fun distance(cat1: Cat, cat2: Cat, metric: String): Float {
     return when (metric) {
-        "euclidean" -> sqrt((cat1.x - cat2.x).pow(2) + (cat1.y - cat2.y).pow(2))
-        "manhattan" -> abs(cat1.x - cat2.x) + abs(cat1.y - cat2.y)
-        "chebyshev" -> maxOf(abs(cat1.x - cat2.x), abs(cat1.y - cat2.y))
+        "euclidean" -> sqrt((cat1.x.value - cat2.x.value).pow(2) + (cat1.y.value - cat2.y.value).pow(2))
+        "manhattan" -> abs(cat1.x.value - cat2.x.value) + abs(cat1.y.value - cat2.y.value)
+        "chebyshev" -> maxOf(abs(cat1.x.value - cat2.x.value), abs(cat1.y.value - cat2.y.value))
         else -> throw IllegalArgumentException("Invalid distance metric: $metric")
     }
 }

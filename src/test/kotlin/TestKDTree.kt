@@ -43,7 +43,7 @@ class KDTreeTest {
     }
 
     @Test
-    fun `test nearest neighbor with far target () {
+    fun `test nearest neighbor with far target` () {
         val cats = listOf(
             Cat(1f, 2f),
             Cat(3f, 4f),
@@ -75,7 +75,7 @@ class KDTreeTest {
     }
 
     @Test
-    fun `test nearest neighbor with Chebyshev distance () {
+    fun `test nearest neighbor with Chebyshev distance` () {
         val cats = listOf(
             Cat(1f, 2f),
             Cat(3f, 4f),

@@ -1,9 +1,8 @@
 import androidx.compose.ui.graphics.Color
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Assertions.*
 
-class CatStateTest {
+class TestStates {
 
     @Test
     fun `test WalkingState`() {

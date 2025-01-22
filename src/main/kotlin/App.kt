@@ -96,23 +96,20 @@ fun updateCats(
     val newCats = cats.map { cat ->
         val nearestCat = catsKDTree.nearestNeighbor(cat)
         val catState = when {
-            nearestCat?.let { distance(cat, it) }!! <= r0 -> State.FIGHT
+            nearestCat?.let { distance(cat, it) }!! <= r0 -> FightingState()
             distance(cat, nearestCat) <= R0 && Random.nextFloat() <
-                    (1 / distance(cat, nearestCat).pow(2)) -> State.HISS
+                    (1 / distance(cat, nearestCat).pow(2)) -> HissingState()
 
-            cat.sleepTimer > 0 -> State.SLEEP
+            cat.sleepTimer > 0 -> SleepingState()
             Random.nextFloat() < sleepProbability -> {
                 cat.sleepTimer = cat.sleepDuration
-                State.SLEEP
+                SleepingState()
             }
 
-            else -> State.WALK
+            else -> WalkingState()
         }
 
-        val (dx, dy) = when (catState) {
-            State.WALK, State.FIGHT, State.HISS -> Random.nextFloat() * 2 - 1 to Random.nextFloat() * 2 - 1
-            else -> 0f to 0f
-        }
+        val (dx, dy) = catState.nextMove()
 
         val newX = (cat.x + dx).coerceIn(0F, screenSize.first)
         val newY = (cat.y + dy).coerceIn(0F, screenSize.second)
@@ -240,12 +237,7 @@ fun app() {
                 val pointRadius = (50.0 / sqrt(cats.size.toFloat())).coerceAtLeast(1.0)
 
                 cats.forEach { point ->
-                    val color = when (point.state) {
-                        State.WALK -> Color.Green
-                        State.FIGHT -> Color.Red
-                        State.SLEEP -> Color.Blue
-                        State.HISS -> Color.Yellow
-                    }
+                    val color = point.state.color
                     drawCircle(
                         color = color,
                         center = Offset(point.x.dp.toPx(), point.y.dp.toPx()),

@@ -3,20 +3,6 @@ import kotlin.random.Random
 import kotlin.math.pow
 import kotlin.math.abs
 
-/**
- * Represents the different states that an entity (like a cat) can be in.
- *
- * WALK - The entity is in a walking state.
- * FIGHT - The entity is in a fighting state.
- * SLEEP - The entity is in a sleeping state.
- * HISS - The entity is in a hising state.
- */
-enum class State {
-    WALK,
-    FIGHT,
-    SLEEP,
-    HISS
-}
 
 /**
  * A data class representing a cat with specific coordinates, state, and sleeping behavior.
@@ -30,7 +16,7 @@ enum class State {
 data class Cat(
     var x: Float = 0F,
     var y: Float = 0F,
-    var state: State = State.WALK,
+    var state: CatState = WalkingState(),
     var sleepTimer: Int = 0,
     var sleepDuration: Int = Random.nextInt(5, 10)
 ) : Comparable<Cat> {
@@ -95,7 +81,7 @@ fun getRandomFloatInRange(a: Float, b: Float): Float {
  * @return A randomly positioned `Cat` instance within the bounds of the given screen size.
  */
 fun generateRandomCat(screenSize: Pair<Float, Float>) =
-    Cat(getRandomFloatInRange(0F, screenSize.first), getRandomFloatInRange(0F, screenSize.second), State.WALK)
+    Cat(getRandomFloatInRange(0F, screenSize.first), getRandomFloatInRange(0F, screenSize.second), WalkingState())
 
 /**
  * Initializes a list of cats with randomly generated positions within the given screen size.

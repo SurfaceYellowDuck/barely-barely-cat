@@ -115,21 +115,3 @@ fun initCats(count: Int, screenSize: Pair<Float, Float>): List<Cat> {
     }
     return points
 }
-
-/**
- * Calculates the distance between two cats using a specified metric.
- *
- * @param cat1 The first cat.
- * @param cat2 The second cat.
- * @param metric The distance metric to use ("euclidean", "manhattan", or "chebyshev").
- * @return The distance between the two cats as a Float.
- * @throws IllegalArgumentException If an invalid metric is provided.
- */
-fun distance(cat1: Cat, cat2: Cat, metric: String): Float {
-    return when (metric) {
-        "euclidean" -> sqrt((cat1.x - cat2.x).pow(2) + (cat1.y - cat2.y).pow(2))
-        "manhattan" -> abs(cat1.x - cat2.x) + abs(cat1.y - cat2.y)
-        "chebyshev" -> maxOf(abs(cat1.x - cat2.x), abs(cat1.y - cat2.y))
-        else -> throw IllegalArgumentException("Invalid distance metric: $metric")
-    }
-}

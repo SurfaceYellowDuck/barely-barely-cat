@@ -1,6 +1,7 @@
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import kotlin.math.sqrt
@@ -29,6 +31,17 @@ import kotlin.random.Random
 import kotlin.math.pow
 import java.io.File
 import com.google.gson.Gson
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.math.abs
+import kotlin.math.atan2
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.material.Slider
+import androidx.compose.ui.unit.Dp
+
+// Import the distance function and DistanceMetric enum from the new file
+import distance
+import DistanceMetric
 
 data class Consts(val sleepProbability: Float, val w: Float, val h: Float, val pc: Int,
     val refTime: Int, val r0_small: Float, val r0_big: Float,
@@ -149,7 +162,7 @@ fun app() {
     val width by remember { mutableStateOf(TextFieldValue(w.toString())) }
     val height by remember { mutableStateOf(TextFieldValue(h.toString())) }
 
-    val methods = listOf("euclidean", "manhattan", "chebyshev")
+    val methods = listOf(DistanceMetric.EUCLIDEAN, DistanceMetric.MANHATTAN, DistanceMetric.CHEBYSHEV)
     var selectedMethod by remember { mutableStateOf(methods[0]) }
     var expanded by remember { mutableStateOf(false) }
 
@@ -194,7 +207,7 @@ fun app() {
                 )
                 Box {
                     Button(onClick = { expanded = true }) {
-                        Text(selectedMethod)
+                        Text(selectedMethod.name)
                     }
                     DropdownMenu(
                         expanded = expanded,
@@ -205,7 +218,7 @@ fun app() {
                                 selectedMethod = method
                                 expanded = false
                             }) {
-                                Text(method)
+                                Text(method.name)
                             }
                         }
                     }

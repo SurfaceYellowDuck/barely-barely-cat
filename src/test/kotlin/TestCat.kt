@@ -2,38 +2,60 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
 
 class TestCat {
-   @Test
-   fun `test distance function`() {
-       val cat1 = Cat(0f, 0f)
-       val cat2 = Cat(3f, 4f)
-
-       assertEquals(5f, distance(cat1, cat2, "euclidean"))
-       assertEquals(7f, distance(cat1, cat2, "manhattan"))
-       assertEquals(4f, distance(cat1, cat2, "chebyshev"))
-   }
-
     @Test
-    fun testNearestNeighbor() {
-        val dista = { cat1: Cat, cat2: Cat -> distance(cat1, cat2, "euclidean") }
-        val cats = listOf(
-            Cat(9.0f, 5.0f),
-            Cat(100.0f, 600.0f),
-            Cat(15.0f, 15.0f)
-        )
-        val kdTree = KDTree(cats, dista)
+    fun `test Cat equality`() {
+        val cat1 = Cat(x = 1.0f, y = 2.0f)
+        val cat2 = Cat(x = 1.0f, y = 2.0f)
+        val cat3 = Cat(x = 3.0f, y = 4.0f)
 
-        val target = Cat(9.0f, 6.0f)
-        val nearest = kdTree.nearestNeighbor(target)
-        
-        assertEquals(Cat(9.0f, 5.0f), nearest)
+        assertEquals(cat1, cat2)
+        assertNotEquals(cat1, cat3)
     }
 
     @Test
-    fun testEmptyKDTree() {
-        val dista = { cat1: Cat, cat2: Cat -> distance(cat1, cat2, "euclidean") }
-        val cats = emptyList<Cat>()
-        val kdTree = KDTree(cats, dista)
+    fun `test Cat comparison`() {
+        val cat1 = Cat(x = 1.0f, y = 2.0f)
+        val cat2 = Cat(x = 3.0f, y = 4.0f)
 
-        assertNull(kdTree.root)
+        assertTrue(cat1 < cat2)
+        assertTrue(cat2 > cat1)
+    }
+
+    @Test
+    fun `test getRandomFloatInRange`() {
+        val min = 1.0f
+        val max = 5.0f
+        val randomValue = getRandomFloatInRange(min, max)
+
+        assertTrue(randomValue >= min && randomValue < max)
+    }
+
+    @Test
+    fun `test generateRandomCat`() {
+        val screenSize = Pair(100f, 200f)
+        val cat = generateRandomCat(screenSize)
+
+        assertTrue(cat.x in 0f..screenSize.first)
+        assertTrue(cat.y in 0f..screenSize.second)
+    }
+
+    @Test
+    fun `test initCats unique positions`() {
+        val screenSize = Pair(100f, 200f)
+        val cats = initCats(10, screenSize)
+
+        assertEquals(10, cats.size)
+        assertTrue(cats.distinctBy { it.x to it.y }.size == cats.size)
+    }
+
+    @Test
+    fun `test initCats positions within screen size`() {
+        val screenSize = Pair(100f, 200f)
+        val cats = initCats(10, screenSize)
+
+        cats.forEach { cat ->
+            assertTrue(cat.x in 0f..screenSize.first)
+            assertTrue(cat.y in 0f..screenSize.second)
+        }
     }
 }

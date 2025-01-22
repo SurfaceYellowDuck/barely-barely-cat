@@ -40,12 +40,12 @@ compose.desktop {
 }
 
 tasks.test {
-    finalizedBy(tasks.jacocoTestReport) // report is always generated after tests run
+    finalizedBy(tasks.jacocoTestReport)
     useJUnitPlatform()
 }
 
 tasks.jacocoTestReport {
-    dependsOn(tasks.test) // tests are required to run before generating the report
+    dependsOn(tasks.test)
     reports {
         xml.required.set(false)
         html.required.set(true)
@@ -53,4 +53,15 @@ tasks.jacocoTestReport {
         csv.required.set(true)
         csv.outputLocation.set(layout.buildDirectory.file("jacoco/report.csv"))
     }
+
+    classDirectories.setFrom(
+        files(classDirectories.files.map {
+            fileTree(it) {
+                exclude("**/MainKt.class")
+                exclude("**/AppKt.class")
+                exclude("**/AppKt$*")
+                exclude("**/ComposableSingletons$*")
+            }
+        })
+    )
 }

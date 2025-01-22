@@ -2,6 +2,7 @@ import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 
 plugins {
     kotlin("jvm")
+    id("jacoco")
     id("org.jetbrains.compose")
     id("org.jetbrains.kotlin.plugin.compose")
 }
@@ -39,5 +40,17 @@ compose.desktop {
 }
 
 tasks.test {
+    finalizedBy(tasks.jacocoTestReport) // report is always generated after tests run
     useJUnitPlatform()
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test) // tests are required to run before generating the report
+    reports {
+        xml.required.set(false)
+        html.required.set(true)
+        html.outputLocation.set(layout.buildDirectory.dir("reports/jacoco"))
+        csv.required.set(true)
+        csv.outputLocation.set(layout.buildDirectory.file("jacoco/report.csv"))
+    }
 }

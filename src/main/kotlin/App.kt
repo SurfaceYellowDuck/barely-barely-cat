@@ -1,4 +1,3 @@
-import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -17,32 +16,10 @@ import androidx.compose.ui.unit.dp
 import kotlin.math.sqrt
 import kotlin.random.Random
 import kotlin.math.pow
-import java.io.File
-import com.google.gson.Gson
 import kotlinx.coroutines.delay
 
-data class Consts(
-    val sleepProbability: Float, val w: Float, val h: Float, val pc: Int,
-    val refTime: Int, val r0_small: Float, val r0_big: Float,
-    val R01_big: Float, val R01_small: Float
-)
 
-/**
- * Constant value representing a distance threshold used to determine the proximity between cats.
- *
- * If the distance between two cats is less than or equal to `r0`, certain state changes like `FIGHT` or `HISS` can be triggered.
- */
-
-
-//val filePath = "const.json" // Replace with your JSON file path
-//val file = File(filePath)
-//
-//val jsonString = file.readText()
-//val consts = Gson().fromJson(jsonString, Consts::class.java)
-
-
-
-class App(val consts: Consts) {
+class App(private val consts: Consts) {
     fun updateCats(
         cats: List<Cat>,
         catsKDTree: KDTree,
@@ -112,20 +89,19 @@ class App(val consts: Consts) {
             Text(buttonText)
         }
     }
+
     @Composable
     fun run() {
         var refreshTime by remember { mutableStateOf(TextFieldValue(consts.refTime.toString())) }
         var selectedMethod by remember { mutableStateOf(DistanceMetric.EUCLIDEAN) }
         val cats = remember { mutableStateOf(emptyList<Cat>()) }
 
-        // LaunchedEffect теперь зависит от refreshTime и selectedMethod
         LaunchedEffect(Unit) {
             while (true) {
                 if (cats.value.isNotEmpty()) {
                     val dista = { cat1: Cat, cat2: Cat -> distance(cat1, cat2, selectedMethod) }
                     val catsKDTree = KDTree(cats.value, dista)
                     cats.value = updateCats(cats.value, catsKDTree, dista, (consts.w to consts.h))
-                    // Используем текущее значение refreshTime
                     delay(refreshTime.text.toLongOrNull() ?: 100)
                 } else {
                     delay(100)
@@ -166,7 +142,6 @@ class App(val consts: Consts) {
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     drawTextField(pointCount, { pointCount = it }, "Point Count")
-                    // Используем callback для обновления времени
                     drawTextField(currentRefreshTime, { refreshTime(it) }, "Refresh Time")
 
                     Box {
@@ -177,7 +152,7 @@ class App(val consts: Consts) {
                         ) {
                             DistanceMetric.entries.forEach { method ->
                                 DropdownMenuItem(onClick = {
-                                    selectedMethod(method) // Используем callback для обновления метрики
+                                    selectedMethod(method)
                                     expanded = false
                                 }) {
                                     Text(method.name)
@@ -204,15 +179,4 @@ class App(val consts: Consts) {
             }
         }
     }
-}
-
-@Composable
-@Preview
-fun app() {
-    val filePath = "const.json"
-    val file = File(filePath)
-    val jsonString = file.readText()
-    val consts = Gson().fromJson(jsonString, Consts::class.java)
-    val app = App(consts)
-    app.run()
 }

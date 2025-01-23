@@ -5,6 +5,7 @@ interface CatState {
     fun nextMove(): Pair<Float, Float> {
         return Random.nextFloat() * 2 - 1 to Random.nextFloat() * 2 - 1
     }
+
     val color: Color
 }
 

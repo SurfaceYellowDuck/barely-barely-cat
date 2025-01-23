@@ -1,7 +1,6 @@
 import kotlin.random.Random
 
 
-
 /**
  * A data class representing a cat with specific coordinates, state, and sleeping behavior.
  *

@@ -114,7 +114,43 @@ class App(val consts: Consts) {
         }
     }
     @Composable
-    fun drawAll(cats: MutableState<List<Cat>>, selectedMethod: MutableState<DistanceMetric>, refreshTime: MutableState<TextFieldValue>) {
+    fun run() {
+        var refreshTime by remember { mutableStateOf(TextFieldValue(consts.refTime.toString())) }
+        var selectedMethod by remember { mutableStateOf(DistanceMetric.EUCLIDEAN) }
+        val cats = remember { mutableStateOf(emptyList<Cat>()) }
+
+        // LaunchedEffect теперь зависит от refreshTime и selectedMethod
+        LaunchedEffect(cats.value, refreshTime.text, selectedMethod) {
+            while (true) {
+                if (cats.value.isNotEmpty()) {
+                    val dista = { cat1: Cat, cat2: Cat -> distance(cat1, cat2, selectedMethod) }
+                    val catsKDTree = KDTree(cats.value, dista)
+                    cats.value = updateCats(cats.value, catsKDTree, dista, (consts.w to consts.h))
+                    // Используем текущее значение refreshTime
+                    delay(refreshTime.text.toLongOrNull() ?: 100)
+                } else {
+                    delay(100)
+                }
+            }
+        }
+
+        drawAll(
+            cats = cats,
+            selectedMethod = { newMethod -> selectedMethod = newMethod },
+            refreshTime = { newTime -> refreshTime = newTime },
+            currentMethod = selectedMethod,
+            currentRefreshTime = refreshTime
+        )
+    }
+
+    @Composable
+    fun drawAll(
+        cats: MutableState<List<Cat>>,
+        selectedMethod: (DistanceMetric) -> Unit,
+        refreshTime: (TextFieldValue) -> Unit,
+        currentMethod: DistanceMetric,
+        currentRefreshTime: TextFieldValue
+    ) {
         var pointCount by remember { mutableStateOf(TextFieldValue(consts.pc.toString())) }
         val width by remember { mutableStateOf(TextFieldValue(consts.w.toString())) }
         val height by remember { mutableStateOf(TextFieldValue(consts.h.toString())) }
@@ -131,16 +167,18 @@ class App(val consts: Consts) {
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     drawTextField(pointCount, { pointCount = it }, "Point Count")
-                    drawTextField(refreshTime.value, { refreshTime.value = it }, "Refresh Time")
+                    // Используем callback для обновления времени
+                    drawTextField(currentRefreshTime, { refreshTime(it) }, "Refresh Time")
+
                     Box {
-                        drawButton({ expanded = true }, selectedMethod.value.name)
+                        drawButton({ expanded = true }, currentMethod.name)
                         DropdownMenu(
                             expanded = expanded,
                             onDismissRequest = { expanded = false }
                         ) {
                             DistanceMetric.entries.forEach { method ->
                                 DropdownMenuItem(onClick = {
-                                    selectedMethod.value = method
+                                    selectedMethod(method) // Используем callback для обновления метрики
                                     expanded = false
                                 }) {
                                     Text(method.name)
@@ -148,8 +186,8 @@ class App(val consts: Consts) {
                             }
                         }
                     }
+
                     drawButton({
-                        // Важное изменение здесь - используем setValue
                         cats.value = initCats(pointCount.text.toInt(), screenSize)
                     }, "Start")
                 }
@@ -166,30 +204,6 @@ class App(val consts: Consts) {
                 }
             }
         }
-    }
-
-    @Composable
-    fun run() {
-        var refreshTime by remember { mutableStateOf(TextFieldValue(consts.refTime.toString())) }
-        val methods = listOf(DistanceMetric.EUCLIDEAN, DistanceMetric.MANHATTAN, DistanceMetric.CHEBYSHEV)
-        var selectedMethod by remember { mutableStateOf(methods[0]) }
-        // Важное изменение здесь - делаем cats общим mutableStateOf
-        val cats = remember { mutableStateOf(emptyList<Cat>()) }
-
-        LaunchedEffect(cats.value) {
-            while (true) {
-                if (cats.value.isNotEmpty()) {
-                    val dista = { cat1: Cat, cat2: Cat -> distance(cat1, cat2, selectedMethod) }
-                    val catsKDTree = KDTree(cats.value, dista)
-                    cats.value = updateCats(cats.value, catsKDTree, dista, (consts.w to consts.h))
-                    delay(refreshTime.text.toLongOrNull() ?: 100)
-                } else {
-                    delay(100)
-                }
-            }
-        }
-
-        drawAll(cats, remember { mutableStateOf(selectedMethod) }, remember { mutableStateOf(refreshTime) })
     }
 }
 

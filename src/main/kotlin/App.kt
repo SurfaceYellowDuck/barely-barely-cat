@@ -61,33 +61,32 @@ class App(val consts: Consts) {
             else -> 5f
         }
 
-        return cats.map { cat ->
+        val newCats = cats.map { cat ->
             val nearestCat = catsKDTree.nearestNeighbor(cat)
             val catState = when {
                 nearestCat?.let { distance(cat, it) }!! <= r0 -> FightingState()
                 distance(cat, nearestCat) <= R0 && Random.nextFloat() <
                         (1 / distance(cat, nearestCat).pow(2)) -> HissingState()
+
                 cat.sleepTimer > 0 -> SleepingState()
                 Random.nextFloat() < consts.sleepProbability -> {
                     cat.sleepTimer = cat.sleepDuration
                     SleepingState()
                 }
+
                 else -> WalkingState()
             }
 
             val (dx, dy) = catState.nextMove()
 
-            // Увеличим скорость движения
-            val newX = (cat.x + dx).coerceIn(0f, screenSize.first)
-            val newY = (cat.y + dy).coerceIn(0f, screenSize.second)
+            val newX = (cat.x + dx).coerceIn(0F, screenSize.first)
+            val newY = (cat.y + dy).coerceIn(0F, screenSize.second)
 
-            cat.copy(
-                x = newX,
-                y = newY,
-                state = catState,
-                sleepTimer = if (cat.sleepTimer > 0) cat.sleepTimer - 1 else 0
-            )
-        }
+            if (cat.sleepTimer > 0) cat.sleepTimer--
+
+            Cat(newX, newY, catState, cat.sleepTimer, cat.sleepDuration)
+        }.toList()
+        return newCats
     }
 
 

@@ -119,7 +119,7 @@ class App(val consts: Consts) {
         val cats = remember { mutableStateOf(emptyList<Cat>()) }
 
         // LaunchedEffect теперь зависит от refreshTime и selectedMethod
-        LaunchedEffect(cats.value, refreshTime.text, selectedMethod) {
+        LaunchedEffect(Unit) {
             while (true) {
                 if (cats.value.isNotEmpty()) {
                     val dista = { cat1: Cat, cat2: Cat -> distance(cat1, cat2, selectedMethod) }

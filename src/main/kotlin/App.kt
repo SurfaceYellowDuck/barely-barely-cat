@@ -65,11 +65,11 @@ class App(val consts: Consts) {
             val nearestCat = catsKDTree.nearestNeighbor(cat)
             val catState = when {
                 nearestCat?.let { distance(cat, it) }!! <= r0 -> FightingState()
-                nearestCat?.let { distance(cat, it) }!! <= R0 && Random.nextFloat() <
+                distance(cat, nearestCat) <= R0 && Random.nextFloat() <
                         (1 / distance(cat, nearestCat).pow(2)) -> HissingState()
                 cat.sleepTimer > 0 -> SleepingState()
                 Random.nextFloat() < consts.sleepProbability -> {
-                    cat.copy(sleepTimer = cat.sleepDuration)
+                    cat.sleepTimer = cat.sleepDuration
                     SleepingState()
                 }
                 else -> WalkingState()

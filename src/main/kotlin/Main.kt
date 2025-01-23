@@ -2,7 +2,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
+import com.google.gson.Gson
+import java.io.File
 
+val filePath = "const.json" // Replace with your JSON file path
+val file = File(filePath)
+
+val jsonString = file.readText()
+val consts = Gson().fromJson(jsonString, Consts::class.java)
 val width = consts.w
 val height = consts.h
 

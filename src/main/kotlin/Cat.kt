@@ -1,7 +1,5 @@
-import kotlin.math.sqrt
 import kotlin.random.Random
-import kotlin.math.pow
-import kotlin.math.abs
+
 
 
 /**
@@ -57,8 +55,9 @@ data class Cat(
      */
     override fun hashCode(): Int {
         var result = x.hashCode()
-        result = 31 * result + y.hashCode()
-        result = 31 * result + state.hashCode()
+        val poly_coeff = 31
+        result = poly_coeff * result + y.hashCode()
+        result = poly_coeff * result + state.hashCode()
         return result
     }
 }

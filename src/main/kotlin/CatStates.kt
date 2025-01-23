@@ -29,5 +29,5 @@ class SleepingState : CatState {
 
 class HissingState : CatState {
     override val color: Color
-        get() = Color.Yellow
+        get() = Color(0xFFFFC0CB)
 }

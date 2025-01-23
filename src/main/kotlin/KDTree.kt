@@ -41,10 +41,18 @@ class KDTree(cats: List<Cat>, distanceFunction: (Cat, Cat) -> Float) {
      */
     private fun buildTree(points: List<Cat>, depth: Int): KDNode? {
         if (points.isEmpty()) return null
+
+        // Determine the axis to split on (0 for x-axis, 1 for y-axis)
         val axis = depth % 2
+
+        // Sort points based on the current axis
         val sortedPoints = points.sortedWith(compareBy { if (axis == 0) it.x else it.y })
+
+        // Find the median point
         val medianIndex = sortedPoints.size / 2
         val medianPoint = sortedPoints[medianIndex]
+
+        // Recursively build the left and right subtrees
         return KDNode(
             cat = medianPoint,
             axis = axis,
@@ -83,9 +91,13 @@ class KDTree(cats: List<Cat>, distanceFunction: (Cat, Cat) -> Float) {
     ): KDNode? {
         if (node == null) return bestNode
 
+        // Determine the axis to compare on
         val axis = node.axis
+
+        // Calculate the distance from the target to the current node
         val currentDist = dist(target, node.cat)
 
+        // Update the best node and distance if the current node is closer
         var newBestNode = bestNode
         var newBestDist = bestDist
         if (target != node.cat) {
@@ -95,11 +107,14 @@ class KDTree(cats: List<Cat>, distanceFunction: (Cat, Cat) -> Float) {
             }
         }
 
+        // Determine which subtree to search first
         val diff = if (axis == 0) target.x - node.cat.x else target.y - node.cat.y
         val (nextNode, otherNode) = if (diff < 0) node.left to node.right else node.right to node.left
 
+        // Recursively search the next subtree
         newBestNode = nearestNeighbor(nextNode, target, depth + 1, newBestNode, newBestDist)
 
+        // Check if the other subtree could contain a closer point
         if (abs(diff) < newBestDist) {
             newBestNode = nearestNeighbor(
                 otherNode,

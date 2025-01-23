@@ -18,8 +18,21 @@ import kotlin.random.Random
 import kotlin.math.pow
 import kotlinx.coroutines.delay
 
-
+**
+ * Main application class that manages the simulation of cats.
+ *
+ * @property consts The configuration constants used in the application.
+ */
 class App(private val consts: Consts) {
+    /**
+     * Updates the list of cats based on their current state and position.
+     *
+     * @param cats The list of cats to be updated.
+     * @param catsKDTree A KDTree that helps to find the nearest neighbor of a cat.
+     * @param distance A function that calculates the distance between two cats.
+     * @param screenSize A pair representing the width and height of the screen.
+     * @return A new list of cats with updated positions and states.
+     */
     fun updateCats(
         cats: List<Cat>,
         catsKDTree: KDTree,
@@ -66,7 +79,13 @@ class App(private val consts: Consts) {
         return newCats
     }
 
-
+    /**
+     * Composable function to draw a text field.
+     *
+     * @param text The current text value of the text field.
+     * @param onValueChange The callback to be invoked when the text value changes.
+     * @param label The label to be displayed for the text field.
+     */
     @Composable
     fun drawTextField(text: TextFieldValue, onValueChange: (TextFieldValue) -> Unit, label: String) {
         TextField(
@@ -77,6 +96,12 @@ class App(private val consts: Consts) {
         )
     }
 
+    /**
+     * Composable function to draw a button.
+     *
+     * @param onClick The callback to be invoked when the button is clicked.
+     * @param buttonText The text to be displayed on the button.
+     */
     @Composable
     fun drawButton(onClick: () -> Unit, buttonText: String) {
         Button(
@@ -90,6 +115,9 @@ class App(private val consts: Consts) {
         }
     }
 
+    /**
+     * Composable function to run the main application.
+     */
     @Composable
     fun run() {
         var refreshTime by remember { mutableStateOf(TextFieldValue(consts.refTime.toString())) }
@@ -118,6 +146,15 @@ class App(private val consts: Consts) {
         )
     }
 
+    /**
+     * Composable function to draw all UI components.
+     *
+     * @param cats The list of cats to be displayed.
+     * @param selectedMethod The callback to be invoked when the distance metric method changes.
+     * @param refreshTime The callback to be invoked when the refresh time changes.
+     * @param currentMethod The current distance metric method.
+     * @param currentRefreshTime The current refresh time.
+     */
     @Composable
     fun drawAll(
         cats: MutableState<List<Cat>>,

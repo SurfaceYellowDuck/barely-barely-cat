@@ -3,6 +3,7 @@ import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 plugins {
     kotlin("jvm")
     id("jacoco")
+    id("org.jetbrains.dokka") version "2.0.0"
     id("org.jetbrains.compose")
     id("org.jetbrains.kotlin.plugin.compose")
 }

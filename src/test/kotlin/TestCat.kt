@@ -72,4 +72,48 @@ class DistanceTest {
 
         assertNull(kdTree.root)
     }
+
+    @Test
+    fun testMultipleCatsWithSameCoordinates() {
+        val dista = { cat1: Cat, cat2: Cat -> distance(cat1, cat2, "euclidean") }
+        val targetCat = Cat(10f, 20f, State.SLEEP, 2, 7)
+        val nearestNeighbor = Cat(10f, 20f, State.WALK, 0, 10)
+        val cats = listOf(
+            Cat(10f, 20f, State.SLEEP, 2, 7),
+            Cat(10f, 20f, State.WALK, 0, 10),
+            Cat(30f, 40f, State.WALK, 2, 10)
+        )
+        val kdTree = KDTree(cats, dista)
+
+        val nearest = kdTree.nearestNeighbor(targetCat)
+
+        assertEquals(nearestNeighbor, nearest)
+    }
+
+    // precondition: set "sleepProbability" : 1 in json
+    @Test
+    fun testCatsEnterSleepState() {
+        val screenSize = Pair(100F, 100F)
+        val cats = initCats(5, screenSize)
+        val dista = { cat1: Cat, cat2: Cat -> distance(cat1, cat2, "euclidean") }
+        val kdTree = KDTree(cats, dista)
+        val newCats = updateCats(cats, kdTree, dista, screenSize)
+
+        assertTrue(newCats.all { it.state == State.SLEEP })
+    }
+
+    // precondition: set "sleepProbability" : 0 in json
+    @Test
+    fun testCatsWithoutNeighborsWalk() {
+        val screenSize = Pair(100F, 100F)
+        val cat1 = Cat(10F, 10F)
+        val cat2 = Cat(90F, 90F)
+        val cats = listOf(cat1, cat2)
+        val dista = { cat1: Cat, cat2: Cat -> distance(cat1, cat2, "euclidean") }
+        val kdTree = KDTree(cats, dista)
+        val newCats = updateCats(cats, kdTree, dista, screenSize)
+
+        assertTrue(newCats.all { it.state == State.WALK })
+    }
+
 }

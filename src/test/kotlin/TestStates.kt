@@ -37,6 +37,6 @@ class TestStates {
     fun `test HissingState`() {
         val hissingState = HissingState()
 
-        assertEquals(Color.Yellow, hissingState.color)
+        assertEquals(Color.Black, hissingState.color)
     }
 }

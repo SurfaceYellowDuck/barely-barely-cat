@@ -14,70 +14,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import kotlin.math.sqrt
-import kotlin.random.Random
-import kotlin.math.pow
 import kotlinx.coroutines.delay
 
-**
+/**
  * Main application class that manages the simulation of cats.
  *
- * @property consts The configuration constants used in the application.
+ * @property config The configuration constants used in the application.
  */
-class App(private val consts: Consts) {
-    /**
-     * Updates the list of cats based on their current state and position.
-     *
-     * @param cats The list of cats to be updated.
-     * @param catsKDTree A KDTree that helps to find the nearest neighbor of a cat.
-     * @param distance A function that calculates the distance between two cats.
-     * @param screenSize A pair representing the width and height of the screen.
-     * @return A new list of cats with updated positions and states.
-     */
-    fun updateCats(
-        cats: List<Cat>,
-        catsKDTree: KDTree,
-        distance: (Cat, Cat) -> Float,
-        screenSize: Pair<Float, Float>
-    ): List<Cat> {
-        val r0 = when {
-            cats.size.toFloat() < 100 -> consts.r0_big
-            cats.size.toFloat() < 10000 -> consts.r0_small
-            else -> 1f
-        }
-
-        val R0 = when {
-            cats.size.toFloat() < 100 -> consts.R01_big
-            cats.size.toFloat() < 10000 -> consts.R01_small
-            else -> 5f
-        }
-
-        val newCats = cats.map { cat ->
-            val nearestCat = catsKDTree.nearestNeighbor(cat)
-            val catState = when {
-                nearestCat?.let { distance(cat, it) }!! <= r0 -> FightingState()
-                distance(cat, nearestCat) <= R0 && Random.nextFloat() <
-                        (1 / distance(cat, nearestCat).pow(2)) -> HissingState()
-
-                cat.sleepTimer > 0 -> SleepingState()
-                Random.nextFloat() < consts.sleepProbability -> {
-                    cat.sleepTimer = cat.sleepDuration
-                    SleepingState()
-                }
-
-                else -> WalkingState()
-            }
-
-            val (dx, dy) = catState.nextMove()
-
-            val newX = (cat.x + dx).coerceIn(0F, screenSize.first)
-            val newY = (cat.y + dy).coerceIn(0F, screenSize.second)
-
-            if (cat.sleepTimer > 0) cat.sleepTimer--
-
-            Cat(newX, newY, catState, cat.sleepTimer, cat.sleepDuration)
-        }.toList()
-        return newCats
-    }
+class App(private val config: Config) {
 
     /**
      * Composable function to draw a text field.
@@ -120,7 +64,7 @@ class App(private val consts: Consts) {
      */
     @Composable
     fun run() {
-        var refreshTime by remember { mutableStateOf(TextFieldValue(consts.refTime.toString())) }
+        var refreshTime by remember { mutableStateOf(TextFieldValue(config.refTime.toString())) }
         var selectedMethod by remember { mutableStateOf(DistanceMetric.EUCLIDEAN) }
         val cats = remember { mutableStateOf(emptyList<Cat>()) }
 
@@ -129,7 +73,7 @@ class App(private val consts: Consts) {
                 if (cats.value.isNotEmpty()) {
                     val dista = { cat1: Cat, cat2: Cat -> distance(cat1, cat2, selectedMethod) }
                     val catsKDTree = KDTree(cats.value, dista)
-                    cats.value = updateCats(cats.value, catsKDTree, dista, (consts.w to consts.h))
+                    cats.value = updateCats(cats.value, catsKDTree, dista, config)
                     delay(refreshTime.text.toLongOrNull() ?: 100)
                 } else {
                     delay(100)
@@ -163,9 +107,9 @@ class App(private val consts: Consts) {
         currentMethod: DistanceMetric,
         currentRefreshTime: TextFieldValue
     ) {
-        var pointCount by remember { mutableStateOf(TextFieldValue(consts.pc.toString())) }
-        val width by remember { mutableStateOf(TextFieldValue(consts.w.toString())) }
-        val height by remember { mutableStateOf(TextFieldValue(consts.h.toString())) }
+        var pointCount by remember { mutableStateOf(TextFieldValue(config.pc.toString())) }
+        val width by remember { mutableStateOf(TextFieldValue(config.w.toString())) }
+        val height by remember { mutableStateOf(TextFieldValue(config.h.toString())) }
         var expanded by remember { mutableStateOf(false) }
         val screenSize = Pair(width.text.toFloat(), height.text.toFloat())
 

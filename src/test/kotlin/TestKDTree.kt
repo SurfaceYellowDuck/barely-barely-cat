@@ -29,11 +29,7 @@ class KDTreeTest {
     @Test
     fun `test nearest neighbor with multiple elements`() {
         val cats = listOf(
-            Cat(1f, 2f),
-            Cat(3f, 4f),
-            Cat(-1f, -2f),
-            Cat(5f, 6f),
-            Cat(0f, 0f)
+            Cat(1f, 2f), Cat(3f, 4f), Cat(-1f, -2f), Cat(5f, 6f), Cat(0f, 0f)
         )
         val kdTree = KDTree(cats) { cat1, cat2 -> distance(cat1, cat2, DistanceMetric.EUCLIDEAN) }
 
@@ -43,13 +39,9 @@ class KDTreeTest {
     }
 
     @Test
-    fun `test nearest neighbor with far target` () {
+    fun `test nearest neighbor with far target`() {
         val cats = listOf(
-            Cat(1f, 2f),
-            Cat(3f, 4f),
-            Cat(-1f, -2f),
-            Cat(5f, 6f),
-            Cat(0f, 0f)
+            Cat(1f, 2f), Cat(3f, 4f), Cat(-1f, -2f), Cat(5f, 6f), Cat(0f, 0f)
         )
         val kdTree = KDTree(cats) { cat1, cat2 -> distance(cat1, cat2, DistanceMetric.EUCLIDEAN) }
 
@@ -61,11 +53,7 @@ class KDTreeTest {
     @Test
     fun `test nearest neighbor with Manhattan distance`() {
         val cats = listOf(
-            Cat(1f, 2f),
-            Cat(3f, 4f),
-            Cat(-1f, -2f),
-            Cat(5f, 6f),
-            Cat(0f, 0f)
+            Cat(1f, 2f), Cat(3f, 4f), Cat(-1f, -2f), Cat(5f, 6f), Cat(0f, 0f)
         )
         val kdTree = KDTree(cats) { cat1, cat2 -> distance(cat1, cat2, DistanceMetric.MANHATTAN) }
 
@@ -75,18 +63,44 @@ class KDTreeTest {
     }
 
     @Test
-    fun `test nearest neighbor with Chebyshev distance` () {
+    fun `test nearest neighbor with Chebyshev distance`() {
         val cats = listOf(
-            Cat(1f, 2f),
-            Cat(3f, 4f),
-            Cat(-1f, -2f),
-            Cat(5f, 6f),
-            Cat(0f, 0f)
+            Cat(1f, 2f), Cat(3f, 4f), Cat(-1f, -2f), Cat(5f, 6f), Cat(0f, 0f)
         )
         val kdTree = KDTree(cats) { cat1, cat2 -> distance(cat1, cat2, DistanceMetric.CHEBYSHEV) }
 
         val target = Cat(1.5f, 2.5f)
         val nearest = kdTree.nearestNeighbor(target)
         assertEquals(Cat(1f, 2f), nearest)
+    }
+
+    @Test
+    fun `test single cat(hse)`() {
+        var config = DefaultConfig()
+        config.w = 500F
+        config.h = 400F
+        val dist = { cat1: Cat, cat2: Cat -> distance(cat1, cat2, DistanceMetric.EUCLIDEAN) }
+        val cats = initCats(1, Pair(config.w, config.h))
+        val kdTree = KDTree(cats, dist)
+        val newCats = updateCats(cats, kdTree, dist, config)
+        assertEquals(1, newCats.size)
+    }
+
+    @Test
+    fun `test hundred(hse)`() {
+        val screenSize = Pair(100F, 100F)
+        val cats = initCats(100, screenSize)
+        val kdTree = KDTree(cats) { cat1, cat2 -> distance(cat1, cat2, DistanceMetric.EUCLIDEAN) }
+
+        for (target in cats) {
+            val kdTreeNearest = kdTree.nearestNeighbor(target)
+
+            val exptectedNearest =
+                cats.filter { it != target }.minByOrNull { distance(it, target, DistanceMetric.EUCLIDEAN) }
+
+            assertEquals(
+                exptectedNearest, kdTreeNearest, "KDTree's nearest neighbor does not match true nearest neighbor."
+            )
+        }
     }
 }

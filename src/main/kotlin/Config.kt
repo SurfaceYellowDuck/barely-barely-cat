@@ -14,18 +14,23 @@ import java.io.File
  * @property R01_big Big radius for detection.
  * @property R01_small Small radius for detection.
  */
-data class Consts(
-    val sleepProbability: Float, val w: Float, val h: Float, val pc: Int,
-    val refTime: Int, val r0_small: Float, val r0_big: Float,
-    val R01_big: Float, val R01_small: Float
+data class Config(
+    var sleepProbability: Float,
+    var w: Float,
+    var h: Float,
+    var pc: Int,
+    var refTime: Int,
+    var r0_small: Float,
+    var r0_big: Float,
+    var R01_big: Float,
+    var R01_small: Float
 )
+
+fun DefaultConfig() = Config(0.1f, 800f, 800f, 500, 500, 5f, 30f, 90f, 15f)
 
 /**
  * Loads the configuration constants from a JSON file.
  */
-val config = File("const.json").let {
-     Gson().fromJson(it.readText(), Consts::class.java)
-} ?: Consts(0.1f, 800f, 800f, 1000, 100, 0.1f, 0.5f, 1f, 5f)
-
-val width = config.w
-val height = config.h
+fun GetConfigOrDefault(filePath: String) = File(filePath).let {
+    Gson().fromJson(it.readText(), Config::class.java)
+} ?: DefaultConfig()

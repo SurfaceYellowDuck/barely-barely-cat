@@ -1,3 +1,4 @@
+import kotlin.math.pow
 import kotlin.random.Random
 
 
@@ -53,10 +54,10 @@ data class Cat(
      * @return A hash code value for this object.
      */
     override fun hashCode(): Int {
-        var result = x.hashCode()
         val poly_coeff = 31
+        var result = x.hashCode()
         result = poly_coeff * result + y.hashCode()
-        result = poly_coeff * result + state.hashCode()
+//        result = poly_coeff * result + state.hashCode()
         return result
     }
 }
@@ -98,4 +99,60 @@ fun initCats(count: Int, screenSize: Pair<Float, Float>): List<Cat> {
         points.add(point)
     }
     return points
+}
+
+/**
+ * Updates the list of cats based on their current state and position.
+ *
+ * @param cats The list of cats to be updated.
+ * @param catsKDTree A KDTree that helps to find the nearest neighbor of a cat.
+ * @param distance A function that calculates the distance between two cats.
+ * @param screenSize A pair representing the width and height of the screen.
+ * @return A new list of cats with updated positions and states.
+ */
+fun updateCats(
+    cats: List<Cat>,
+    catsKDTree: KDTree,
+    distance: (Cat, Cat) -> Float,
+    config: Config
+): List<Cat> {
+    val r0 = when {
+        cats.size.toFloat() < 100 -> config.r0_big
+        cats.size.toFloat() < 10000 -> config.r0_small
+        else -> 1f
+    }
+
+    val R0 = when {
+        cats.size.toFloat() < 100 -> config.R01_big
+        cats.size.toFloat() < 10000 -> config.R01_small
+        else -> 5f
+    }
+
+    val newCats = cats.map { cat ->
+        val nearestCat = catsKDTree.nearestNeighbor(cat)
+        val catState = when {
+            nearestCat == null -> WalkingState()
+            nearestCat?.let { distance(cat, it) }!! <= r0 -> FightingState()
+            distance(cat, nearestCat) <= R0 && Random.nextFloat() <
+                    (1 / distance(cat, nearestCat).pow(2)) -> HissingState()
+
+            cat.sleepTimer > 0 -> SleepingState()
+            Random.nextFloat() < config.sleepProbability -> {
+                cat.sleepTimer = cat.sleepDuration
+                SleepingState()
+            }
+
+            else -> WalkingState()
+        }
+
+        val (dx, dy) = catState.nextMove()
+
+        val newX = (cat.x + dx).coerceIn(0F, config.w)
+        val newY = (cat.y + dy).coerceIn(0F, config.h)
+
+        if (cat.sleepTimer > 0) cat.sleepTimer--
+
+        Cat(newX, newY, catState, cat.sleepTimer, cat.sleepDuration)
+    }.toList()
+    return newCats
 }
